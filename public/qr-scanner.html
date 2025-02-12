@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+</head>
+<body>
+      <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="logo">
+        <a href="/"><img src="/images/tunes-logo.png" alt="Logo"></a>
+      </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="signup.html">Register</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="menu-toggle">&#9776;</button>
+  </nav>
+    <div class="signup-container">
+        <div id="qr-reader" style="width: 100%"></div>
+        <div id="qr-result" style="display : none">
+        <p id="userEmail"></p>
+        <p id="userName"></p>
+        <p id="userOrganisation"></p>
+        <p id="userSignedIn"></p>
+        </div>
+        <button id="sign-button" class = "sign-button", style ="display: none;">Sign in</button>
+        <button id="resume-button" style="display: none;">Scan Again</button>
+        <button id = "return-to-dashboard" style = "margin-top: 20px">Return to dashboard</button>
+        <p id = "message", class="message"> </p>
+        
+        </div>
+        
+    <script src="qr-scanner.js"></script>
+</body>
+</html>

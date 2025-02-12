@@ -14,7 +14,7 @@ node_modules/
 .vscode/
 
 #ignore data
-data/
+data/*
 
 #ignore messege log
 server/messages.txt

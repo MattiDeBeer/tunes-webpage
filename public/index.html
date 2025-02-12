@@ -1,1 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
+    <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="logo">
+        <a href="/"><img src="/images/tunes-logo.png" alt="Logo"></a>
+      </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="signup.html">Register</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <button class="menu-toggle">&#9776;</button>
+  </nav>
+
+    <!-- Login Form -->
+  <div class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="email" name="email" placeholder="email" autocomplete="email" required>
+      <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required>
+    
+      <button id="loginButton">Login</button>
+
+    <!-- Create Account Button -->
+    <button id="createAccountButton" class="create-account">Create an Account</button>
+
+    </form>
+    <p id="message" class="message">Invalid username or password</p>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
