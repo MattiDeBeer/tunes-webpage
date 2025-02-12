@@ -12,3 +12,9 @@ node_modules/
 
 # IDE-specific files (VS Code example)
 .vscode/
+
+#ignore data
+data/
+
+#ignore messege log
+server/messages.txt
