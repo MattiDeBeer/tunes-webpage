@@ -6,8 +6,12 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "html5-qrcode": "^2.3.8",
+    "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.0",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "sequelize": "^6.37.5",
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.0.5"
   }
 }

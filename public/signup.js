@@ -1,60 +1,96 @@
-function showError(message) {
-    const errorMessage = document.getElementById("message");
-    errorMessage.textContent = message; // Update text
-    errorMessage.classList.add("show-error"); // Add fade-in effect
+const apiUrl = window.location.origin;
+
+function showMessage(message, isSuccess) {
+  const messageElement = document.getElementById("message");
+  messageElement.textContent = message;
+  messageElement.classList.add(isSuccess ? "show-success" : "show-error");
+
+  setTimeout(() => {
+    messageElement.classList.remove(isSuccess ? "show-success" : "show-error");
+  }, 3000);
+}
+
+// Fetch the Terms and Conditions from the server
+async function fetchTerms() {
+  const response = await fetch(`${apiUrl}/terms`);
+  const result = await response.json();
+  return result.terms;
+}
+
+// Show terms and conditions modal
+async function showTerms() {
+  terms = await fetchTerms();
+
+  document.getElementById("terms-text").textContent = terms;
+  document.getElementById("termsModal").style.display = "Block";
   
-    // Remove message after 3 seconds (optional)
-    setTimeout(() => {
-      errorMessage.classList.remove("show-error");
-    }, 3000);
+  return new Promise((resolve) => {
+    const acceptButton = document.getElementById("acceptBtn");
+    const declineButton = document.getElementById("declineBtn");
+
+    acceptButton.addEventListener("click", () => {
+      document.getElementById("termsModal").style.display = "none";
+      resolve(true);
+    });
+
+    declineButton.addEventListener("click", () => {
+      document.getElementById("termsModal").style.display = "none";
+      resolve(false);
+    });
+  });
+}
+
+
+async function handleSignup(event) {
+
+  event.preventDefault();
+
+  accept = await showTerms();
+
+  if (!accept){
+    showMessage("You must accept the terms and conditions", false)
+    return
   }
 
-function showSucess(message) {
-    const errorMessage = document.getElementById("message");
-    errorMessage.textContent = message; // Update text
-    errorMessage.classList.add("show-sucess"); // Add fade-in effect
-  
-    // Remove message after 3 seconds (optional)
-    setTimeout(() => {
-      errorMessage.classList.remove("show-sucess");
-    }, 3000);
-  }
+  const formData = {
+    name: document.getElementById("newName").value,
+    password: document.getElementById("newPassword").value,
+    repeatPassword: document.getElementById("newRepeatPassword").value,
+    email: document.getElementById("newEmail").value,
+    organisation: document.getElementById("newOrganisation").value,
+    phoneNumber: document.getElementById("newPhoneNumber").value
+  };
 
-document.getElementById("signupForm").addEventListener("submit", async function(event) {
-    event.preventDefault(); // Prevent page reload
-
-    const newPassword = document.getElementById("newPassword").value;
-    const newEmail = document.getElementById("newEmail").value;
-    const newOrganisation = document.getElementById("newOrganisation").value;
-    const newPhoneNumber = document.getElementById("newPhoneNumber").value;
-    const newRepeatPassword = document.getElementById("newRepeatPassword").value;
-    const newName = document.getElementById("newName").value;
-
-
-    const response = await fetch("http://localhost:3000/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name : newName, password: newPassword , repeatPassword: newRepeatPassword,  email : newEmail, organisation : newOrganisation , phoneNumber : newPhoneNumber}),
+  try {
+    const response = await fetch(`${apiUrl}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     });
 
     const data = await response.json();
-    if (data.message === "Account created successfully!") {
-        showSucess(data.message);
-        console.log(data.message);
-        window.location.href = "index.html";
-    } else {
-        showError(data.message);
-        console.log(data.message);
-    }
-   
-    
-});
+    showMessage(data.message, data.message === "Account created successfully!");
+    console.log(data.message);
 
-document.addEventListener("DOMContentLoaded", () => {
+    if (data.message === "Account created successfully!") {
+      document.getElementById("signupButton").disabled = true;
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      window.location.href = "index.html";
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    showMessage("An error occurred " + error, false);
+  }
+}
+
+function setupMenuToggle() {
   const menuToggle = document.querySelector(".menu-toggle");
   const navLinks = document.querySelector(".nav-links");
 
   menuToggle.addEventListener("click", () => {
     navLinks.classList.toggle("active");
   });
-});
+}
+
+document.getElementById("signupForm").addEventListener("submit", handleSignup);
+document.addEventListener("DOMContentLoaded", setupMenuToggle);

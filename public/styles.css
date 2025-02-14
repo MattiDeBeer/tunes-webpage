@@ -281,7 +281,7 @@ body {
   }
 
   /* When visible, fade in */
-  .message.show-sucess {
+  .message.show-success {
     color: rgb(10, 207, 79);
     opacity: 1;
     transform: translateY(0);
@@ -464,6 +464,86 @@ body {
   cursor: pointer;
   transition: background 0.3s ease;
 }
+
+.terms-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-height: 80vh;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 5%;
+  overflow-y: auto;
+  border-radius: 10px;
+  margin-top: 20px;
+  box-sizing: border-box;
+}
+
+@keyframes flashBlue {
+  0% { background-color: #ffffff; }
+  50% { background-color: #87CEFA; } /* Light blue */
+  100% { background-color: #ffffff; }
+}
+
+.flash-input {
+  animation: flashBlue 2s ease-in-out;
+}
+
+
+/* Table container with scrolling */
+.table-container {
+  max-width: 100%;
+  max-height: 700px; /* Adjust height as needed */
+  overflow: auto; /* Enables scrolling */
+  border: 1px solid #ddd; /* Subtle border */
+  border-radius: 8px; /* Rounded edges */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+}
+
+/* Table headers */
+thead {
+  background-color: #3498db; /* Blue header */
+  color: white;
+  position: sticky;
+  top: 0;
+}
+
+/* Table cells */
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+/* Alternate row coloring */
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Hover effect */
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  th, td {
+      padding: 8px;
+      font-size: 14px;
+  }
+}
+
 
 .logout-button:hover {
   background-color: #c0392b; /* Darker red */

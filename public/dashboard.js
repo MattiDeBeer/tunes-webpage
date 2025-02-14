@@ -1,24 +1,100 @@
-//get QR code function
+const apiUrl = window.location.origin;
+
+// Fetch QR code function
 async function fetchQRCode() {
-    const response = await fetch("/user/qr", {
+    const response = await fetch(`${apiUrl}/user/qr`, {
         headers: {
-            "Authorization": `Bearer ${localStorage.getItem("authToken")}` // Send user token
+            "Authorization": `Bearer ${localStorage.getItem("authToken")}`
         }
     });
 
     if (response.ok) {
-        const qrCodeBlob = await response.blob(); // Convert response to an image blob
-        const qrCodeURL = URL.createObjectURL(qrCodeBlob); // Create a temporary URL
-        document.getElementById("qrCodeImg").src = qrCodeURL; // Set the image source
+        const qrCodeBlob = await response.blob();
+        const qrCodeURL = URL.createObjectURL(qrCodeBlob);
+        document.getElementById("qrCodeImg").src = qrCodeURL;
     } else {
         const errorMessage = await response.json();
         console.error("Failed to fetch QR Code: " + errorMessage.message);
     }
 }
 
+async function showAlert(level,message) {
+    
+    document.getElementById("terms-text").textContent = message;
+    document.getElementById("termsModal").style.display = "Block";
+    
+    return new Promise((resolve) => {
+      const dismissButton = document.getElementById("dismissButton");
+  
+      dismissButton.addEventListener("click", () => {
+        document.getElementById("termsModal").style.display = "none";
+        resolve(true);
+      });
+  
+    });
+  }
+
+// Show Large Alert
+async function showConfirmAlert(message) {
+    document.getElementById("terms-text").textContent = message;
+    document.getElementById("dismissButton").style.display = "none"
+    document.getElementById("acceptBtn").style.display = "block"
+    document.getElementById("declineBtn").style.display = "block"
+    document.getElementById("termsModal").style.display = "block";
+
+
+    return new Promise((resolve) => {
+        const acceptButton = document.getElementById("acceptBtn");
+        const declineButton = document.getElementById("declineBtn");
+        
+        // Define the handler functions
+        const handleAccept = () => {
+            cleanup();
+            resolve(true);
+        };
+        
+        const handleDecline = () => {
+            cleanup();
+            resolve(false);
+        };
+        
+        // Cleanup function to remove listeners and hide modal
+        const cleanup = () => {
+            document.getElementById("dismissButton").style.display = "block"
+            document.getElementById("acceptBtn").style.display = "none"
+            document.getElementById("declineBtn").style.display = "none"
+            document.getElementById("termsModal").style.display = "none";
+            acceptButton.removeEventListener("click", handleAccept);
+            declineButton.removeEventListener("click", handleDecline);
+        };
+        
+        // Add the listeners
+        acceptButton.addEventListener("click", handleAccept);
+        declineButton.addEventListener("click", handleDecline);
+    });
+}
+
+function showMessage(message, type) {
+    const messageElement = document.getElementById("message");
+    messageElement.textContent = message;
+    messageElement.classList.add(`show-${type}`);
+
+    setTimeout(() => {
+        messageElement.classList.remove(`show-${type}`);
+    }, 3000);
+}
+
+function showError(message) {
+    showMessage(message, "error");
+}
+
+function showSuccess(message) {
+    showMessage(message, "success");
+}
+
 function showChangeForm(text) {
-    const forma = document.getElementById("changeDetailForm");
-    const formb = document.getElementById("changeDetailFormBinary");
+    const formA = document.getElementById("changeDetailForm");
+    const formB = document.getElementById("changeDetailFormBinary");
     const formTitle = document.getElementById("ChangeUserDetailsTitle");
     const formLabel1 = document.querySelector("label[for='changeDetailInput1']");
     const formLabel2 = document.querySelector("label[for='changeDetailInput2']");
@@ -27,265 +103,202 @@ function showChangeForm(text) {
     formLabel2.textContent = text;
     formTitle.textContent = "Change " + window.selectedField;
 
-    // Toggle visibility
-    if (forma.style.display === 'none') {
-        formb.style.display = 'none'; // Hide binary form
-        forma.style.display = 'block'; // Show form
-    }
+    formB.style.display = 'none';
+    formA.style.display = 'block';
 }
 
 function showChangeFormBinary(text) {
-    const formb = document.getElementById("changeDetailForm");
-    const forma = document.getElementById("changeDetailFormBinary");
+    const formA = document.getElementById("changeDetailForm");
+    const formB = document.getElementById("changeDetailFormBinary");
     const formTitle = document.getElementById("ChangeUserDetailsTitle");
     const checkbox = document.getElementById("toggle");
 
-    if (window.selectedField === 'signed_in') {
-        formTitle.textContent = "Change Signed In status";
-    } else {
-        formTitle.textContent = "Change Admin status";
-    }
+    formTitle.textContent = window.selectedField === 'isSignedIn' ? "Change Signed In status" : "Change Admin status";
+    checkbox.checked = window.LoadedUserData[window.selectedField] === true;
 
-    if (window.LoadedUserData[window.selectedField] === true) {
-        checkbox.checked = true;
-    } else {    
-        checkbox.checked = false;
-    }
-
-    // Toggle visibility
-    if (forma.style.display === 'none') {
-        formb.style.display = 'none'; // Hide normal form
-        forma.style.display = 'block'; // Show binary form
-    }
+    formA.style.display = 'none';
+    formB.style.display = 'block';
 }
 
-function hideForms(){
-    const formb = document.getElementById("changeDetailForm");
-    const forma = document.getElementById("changeDetailFormBinary");
-
-    formb.style.display = 'none';
-    forma.style.display = 'none';
+function hideForms() {
+    document.getElementById("changeDetailForm").style.display = 'none';
+    document.getElementById("changeDetailFormBinary").style.display = 'none';
 }
 
+const fetchAlert = async () => {
+    // Retrieve auto token
+    const token = localStorage.getItem("authToken");
 
+    try {
+        const response = await fetch(`${apiUrl}/alert/get`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`  // Use a valid user token
+            }
+        });
 
+        const result = await response.json();
+
+        if (response.ok) {
+            showAlert(result.level,result.message)
+        } else {
+            console.log(result.message);
+        }
+    } catch (error) {
+        console.error("Error fetching alert:", error);
+    }
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("authToken");
 
     if (!token) {
-        window.location.href = "index.html"; // Redirect if not logged in
+        window.location.href = "index.html";
         return;
     }
 
-    try {
-        const response = await fetch("http://localhost:3000/user", {
-            method: "GET",
-            headers: {
-                "Authorization": token, // Send token to backend
-                "Content-Type": "application/json",
-            },
-        });
+    const loadUserDetails = async () => {
+        try {
+            const response = await fetch(`${apiUrl}/user`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
 
-        if (!response.ok) {
-            const errorMessage = await response.text();
-            throw new Error("Failed to fetch user data");
-            
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                throw new Error("Failed to fetch user data" + errorMessage);
+            }
+
+            const user = await response.json();
+            window.LoadedUserData = user;
+
+            document.getElementById("name").textContent = user.name;
+            document.getElementById("email").textContent = user.email;
+            document.getElementById("organisation").textContent = user.organisation;
+            document.getElementById("changeName").textContent = user.name;
+            document.getElementById("changeEmail").textContent = user.email;
+            document.getElementById("changeOrganisation").textContent = user.organisation;
+            document.getElementById("changePhoneNumber").textContent = user.phoneNumber;
+
+            const signedInElement = document.getElementById("changeSignedIn");
+            signedInElement.textContent = user.isSignedIn ? "Yes" : "No";
+            signedInElement.style.backgroundColor = user.isSignedIn ? "green" : "red";
+
+            document.getElementById("deleteUser").textContent = "Delete Account";
+            document.getElementById("changePassword").textContent = "Change Password";
+
+            if (user.isAdmin) {
+                window.location.href = "admin-dashboard.html";
+            }
+        } catch (error) {
+            alert("Error fetching user data:", error);
+            localStorage.removeItem("authToken");
+            window.location.href = "index.html";
         }
-
-        const user = await response.json();
-        window.LoadedUserData = user;
-        document.getElementById("name").textContent = user.name;
-        document.getElementById("email").textContent = user.email;
-        document.getElementById("organisation").textContent = user.organisation;
-
-        document.getElementById("changeName").textContent = user.name;
-        document.getElementById("changeEmail").textContent = user.email;
-        document.getElementById("changeOrganisation").textContent = user.organisation;
-        document.getElementById("changePhoneNumber").textContent = user.phoneNumber;
-        document.getElementById("changeSignedIn").textContent = user.signed_in;
-        
-        document.getElementById("deleteUser").textContent = "Delete User";
-        document.getElementById("changePassword").textContent = "Change Password";
-
-        if (user.admin === true) {
-            window.location.href = "admin-dashboard.html";
-        }
-    } catch (error) {
-        console.error("Error fetching user data:", error);
-        window.localStorage.removeItem("authToken");
-        window.location.href = "index.html"; // Redirect if token is invalid
     }
 
-    document.getElementById("changePassword").addEventListener("click", () => {
-        window.selectedField = 'password';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Name button clicked");
-        showChangeForm("Enter new password");
-    });
+    const addChangeListener = (elementId, field, labelText) => {
+        document.getElementById(elementId).addEventListener("click", () => {
+            window.selectedField = field;
+            showChangeForm(labelText);
+        });
+    };
 
-    document.getElementById("changeName").addEventListener("click", () => {
-        window.selectedField = 'name';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Name button clicked");
-        showChangeForm("Enter New Name");
-    });
+    loadUserDetails()
 
-    document.getElementById("changeEmail").addEventListener("click", () => {
-        window.selectedField = 'email';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Email button clicked");
-        showChangeForm("Enter New Email");
-    });
-
-    document.getElementById("changeOrganisation").addEventListener("click", () => {
-        window.selectedField = 'organisation';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Organisation button clicked");
-        showChangeForm("Enter New Organisation");
-    });
-
-    document.getElementById("changePhoneNumber").addEventListener("click", () => {
-        window.selectedField = 'phoneNumber';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Phone Number button clicked");
-        showChangeForm("Enter New Phone Number");
-    });
+    addChangeListener("changePassword", 'password', "Enter new password");
+    addChangeListener("changeName", 'name', "Enter New Name");
+    addChangeListener("changeEmail", 'email', "Enter New Email");
+    addChangeListener("changeOrganisation", 'organisation', "Enter New Organisation");
+    addChangeListener("changePhoneNumber", 'phoneNumber', "Enter New Phone Number");
 
     document.getElementById("changeSignedIn").addEventListener("click", () => {
-        window.selectedField = 'signed_in';
-        const value = window.LoadedUserData[window.selectedField];
+        window.selectedField = 'isSignedIn';
         showChangeFormBinary("Toggle Signed In");
-        console.log("Change Signed In button clicked");
     });
 
-    // Add event listeners for the delete button
     document.getElementById("deleteUser").addEventListener("click", async () => {
-        console.log("Delete User button clicked");
-        userEmail = window.LoadedUserData.email;
+        const token = localStorage.getItem("authToken");
 
-        if(!confirm("Are you sure you want to delete this user?")) {
+        const confirm = await showConfirmAlert("Are you sure you want to delete your account?")
+        if (!confirm) {
             return;
         }
-        
-        const response = await fetch("http://localhost:3000/admin/deleteUser", {
-            method: "POST",
-            headers: {
-                 "Content-Type": "application/json",
-                 "Authorization": `Bearer ${token}`
-             },
-             body: JSON.stringify({ email: userEmail})
-         });
-        
-        const result = await response.json();
 
+        const response = await fetch(`${apiUrl}/user/delete`, {
+            method: "DELETE",
+            headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
         if (response.ok) {
-            alert("Successfully deleted account!" + result.message);
+            alert("Successfully deleted account!");
             localStorage.removeItem("authToken");
-            window.location.href = "admin-dashboard.html";
+            window.location.href = "index.html";
         } else {
             alert("Error: " + result.message);
         }
-
     });
 
-
-
-
-    document.getElementById("changeDetailForm").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Prevent form refresh
-    
-        const token = localStorage.getItem("authToken"); // Get the admin token
-        const userEmail = window.LoadedUserData.email;
-        const field = window.selectedField;
-
-        const newValue1 = document.getElementById("changeDetailInput1").value;
-        const newValue2 = document.getElementById("changeDetailInput2").value;
+    const handleFormSubmit = async (event, formId, field, newValue1, newValue2) => {
+        event.preventDefault();
 
         if (newValue1 !== newValue2) {
-            alert("Values do not match");
+            showError("Values do not match");
             return;
         }
-        
-        console.log('Updating user:', userEmail, field, newValue1);
 
-        const response = await fetch("http://localhost:3000/admin/updateUser", {
-           method: "POST",
-           headers: {
+        const response = await fetch(`${apiUrl}/user/updateUser`, {
+            method: "PATCH",
+            headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             },
-            body: JSON.stringify({ email: userEmail, field, newValue: newValue1 })
+            body: JSON.stringify({ field, newValue1, newValue2 })
         });
-    
+
         const result = await response.json();
         if (response.ok) {
-            alert("User updated successfully!");
-            window.location.reload(); // Refresh the page
+            showSuccess("updated successfully!");
+            loadUserDetails()
         } else {
-            alert("Error: " + result.message);
+            showError("Error: " + result.message);
         }
+    };
 
-
-
-        
+    document.getElementById("changeDetailForm").addEventListener("submit", (event) => {
+        const newValue1 = document.getElementById("changeDetailInput1").value;
+        const newValue2 = document.getElementById("changeDetailInput2").value;
+        handleFormSubmit(event, "changeDetailForm", window.selectedField, newValue1, newValue2);
     });
 
-    document.getElementById("changeDetailFormBinary").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Prevent form refresh
-    
-        const token = localStorage.getItem("authToken"); // Get the admin token
-        const userEmail = window.LoadedUserData.email;
-        const field = window.selectedField;
+    document.getElementById("changeDetailFormBinary").addEventListener("submit", (event) => {
+        const newValue1 = document.getElementById("toggle").checked;
+        handleFormSubmit(event, "changeDetailFormBinary", window.selectedField, newValue1, newValue1);
+    });
 
-        const newValue = document.getElementById("toggle").checked;
-        
-        console.log('Updating user:', userEmail, field, newValue);
-
-        const response = await fetch("http://localhost:3000/admin/updateUser", {
-           method: "POST",
-           headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ email: userEmail, field, newValue: newValue })
-        });
-    
-        const result = await response.json();
-        if (response.ok) {
-            alert("User updated successfully!");
-            window.location.reload(); // Refresh the page
-        } else {
-            alert("Error: " + result.message);
-        }
+    document.getElementById("logout").addEventListener("click", () => {
+        localStorage.removeItem("authToken");
+        window.location.href = "index.html";
     });
 
 
+    fetchQRCode();
+    fetchAlert();
 
-});
-
-document.getElementById("logout").addEventListener("click", () => {
-    localStorage.removeItem("authToken"); // Remove token
-    window.location.href = "index.html"; // Redirect to login page
-});
-
-
-// Call this function when the page loads
-document.addEventListener("DOMContentLoaded", fetchQRCode);
-
-document.addEventListener("DOMContentLoaded", () => {
     const menuToggle = document.querySelector(".menu-toggle");
     const navLinks = document.querySelector(".nav-links");
-  
+
     menuToggle.addEventListener("click", () => {
-      navLinks.classList.toggle("active");
+        navLinks.classList.toggle("active");
     });
-  });
+});
 
 
 

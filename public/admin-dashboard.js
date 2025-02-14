@@ -1,52 +1,113 @@
+const apiUrl = window.location.origin;
 
-async function getUserDetails(email) {
-    const token = localStorage.getItem('authToken'); // Get stored token
-
-    try {
-        const response = await fetch(`http://localhost:3000/user-details?email=${encodeURIComponent(email)}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token  // Send token in headers
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('Error:', data.message);
-            return null;
-        }
-
-        //console.log('User Details:', data);
-        return data; // Do something with the data (display on page, etc.)
-
-    } catch (error) {
-        console.error('Failed to fetch user details:', error);
-    }
-}
-
-//get QR code function
+// Fetch QR code function
 async function fetchQRCode() {
-    const response = await fetch("/user/qr", {
+    const response = await fetch(`${apiUrl}/user/qr`, {
         headers: {
-            "Authorization": `Bearer ${localStorage.getItem("authToken")}` // Send user token
+            "Authorization": `Bearer ${localStorage.getItem("authToken")}`
         }
     });
 
     if (response.ok) {
-        const qrCodeBlob = await response.blob(); // Convert response to an image blob
-        const qrCodeURL = URL.createObjectURL(qrCodeBlob); // Create a temporary URL
-        document.getElementById("qrCodeImg").src = qrCodeURL; // Set the image source
+        const qrCodeBlob = await response.blob();
+        const qrCodeURL = URL.createObjectURL(qrCodeBlob);
+        document.getElementById("qrCodeImg").src = qrCodeURL;
     } else {
         const errorMessage = await response.json();
         console.error("Failed to fetch QR Code: " + errorMessage.message);
     }
 }
 
+// Show Large Alert with Dismiss
+async function showDismissAlert(message) {
+    if (message){
+        document.getElementById("terms-text").textContent = message;
+    }
+    const modal = document.getElementById("termsModal");
+    const acceptBtn = document.getElementById("acceptBtn");
+    const declineBtn = document.getElementById("declineBtn");
+    const dismissBtn = document.getElementById("dismissBtn");
+    
+    // Show modal and configure buttons
+    modal.style.display = "block";
+    acceptBtn.style.display = "none";
+    declineBtn.style.display = "none";
+    dismissBtn.style.display = "block";
+
+    return new Promise((resolve) => {
+        const handleDismiss = () => {
+            cleanup();
+            resolve();
+        };
+        
+        // Cleanup function
+        const cleanup = () => {
+            modal.style.display = "none";
+            acceptBtn.style.display = "block";
+            declineBtn.style.display = "block"; 
+            dismissBtn.style.display = "none";
+            dismissBtn.removeEventListener("click", handleDismiss);
+        };
+        
+        // Add listener
+        dismissBtn.addEventListener("click", handleDismiss);
+    });
+}
+
+// Show Large Alert
+async function showConfirmAlert(message) {
+    document.getElementById("terms-text").textContent = message;
+    document.getElementById("termsModal").style.display = "block";
+    return new Promise((resolve) => {
+        const acceptButton = document.getElementById("acceptBtn");
+        const declineButton = document.getElementById("declineBtn");
+        
+        // Define the handler functions
+        const handleAccept = () => {
+            cleanup();
+            resolve(true);
+        };
+        
+        const handleDecline = () => {
+            cleanup();
+            resolve(false);
+        };
+        
+        // Cleanup function to remove listeners and hide modal
+        const cleanup = () => {
+            document.getElementById("termsModal").style.display = "none";
+            acceptButton.removeEventListener("click", handleAccept);
+            declineButton.removeEventListener("click", handleDecline);
+        };
+        
+        // Add the listeners
+        acceptButton.addEventListener("click", handleAccept);
+        declineButton.addEventListener("click", handleDecline);
+    });
+}
+
+//show message funciton
+function showMessage(message, type,messageElementName) {
+    const messageElement = document.getElementById(messageElementName);
+    messageElement.textContent = message;
+    messageElement.classList.add(`show-${type}`);
+
+    setTimeout(() => {
+        messageElement.classList.remove(`show-${type}`);
+    }, 3000);
+}
+
+function showError(message,messageElementName) {
+    showMessage(message, "error",messageElementName);
+}
+
+function showSuccess(message,messageElementName) {
+    showMessage(message, "success",messageElementName);
+}
+
 function showChangeForm(text) {
-    const forma = document.getElementById("changeDetailForm");
-    const formb = document.getElementById("changeDetailFormBinary");
+    const formA = document.getElementById("changeDetailForm");
+    const formB = document.getElementById("changeDetailFormBinary");
     const formTitle = document.getElementById("ChangeUserDetailsTitle");
     const formLabel1 = document.querySelector("label[for='changeDetailInput1']");
     const formLabel2 = document.querySelector("label[for='changeDetailInput2']");
@@ -55,311 +116,625 @@ function showChangeForm(text) {
     formLabel2.textContent = text;
     formTitle.textContent = "Change " + window.selectedField;
 
-    // Toggle visibility
-    if (forma.style.display === 'none') {
-        formb.style.display = 'none'; // Hide binary form
-        forma.style.display = 'block'; // Show form
-    }
+    formB.style.display = 'none';
+    formA.style.display = 'block';
 }
 
 function showChangeFormBinary(text) {
-    const formb = document.getElementById("changeDetailForm");
-    const forma = document.getElementById("changeDetailFormBinary");
+    const formA = document.getElementById("changeDetailForm");
+    const formB = document.getElementById("changeDetailFormBinary");
     const formTitle = document.getElementById("ChangeUserDetailsTitle");
     const checkbox = document.getElementById("toggle");
 
-    if (window.selectedField === 'signed_in') {
-        formTitle.textContent = "Change Signed In status";
-    } else {
-        formTitle.textContent = "Change Admin status";
-    }
+    formTitle.textContent = window.selectedField === 'isSignedIn' ? "Change Signed In status" : "Change Admin status";
+    checkbox.checked = window.LoadedUserData[window.selectedField] === true;
 
-    if (window.LoadedUserData[window.selectedField] === true) {
-        checkbox.checked = true;
-    } else {    
-        checkbox.checked = false;
-    }
+    formA.style.display = 'none';
+    formB.style.display = 'block';
+}
 
-    // Toggle visibility
-    if (forma.style.display === 'none') {
-        formb.style.display = 'none'; // Hide normal form
-        forma.style.display = 'block'; // Show binary form
+function hideForms() {
+    document.getElementById("changeDetailForm").style.display = 'none';
+    document.getElementById("changeDetailFormBinary").style.display = 'none';
+}
+
+async function fetchUsers() {
+
+    const token = localStorage.getItem("authToken");
+
+    try {
+        const response = await fetch(`${apiUrl}/admin/browseUsers`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`  // Ensure admin authentication
+            }
+        });
+
+        const users = await response.json();
+
+        const tableBody = document.querySelector("#userTable tbody");
+        tableBody.innerHTML = ""; // Clear previous content
+
+        users.forEach(user => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.organisation}</td>
+                <td>${user.isSignedIn}</td>
+                <td>
+                    <button class="edit-btn">Edit</button>
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+
+            // Attach event listeners 
+            row.querySelector(".edit-btn").addEventListener("click", () => editUser(user.email));
+
+        });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+    }
+} 
+
+//Load specified user
+function editUser(email) {
+    const emailElement = document.getElementById("getEmail");
+    emailElement.value = email;
+
+    const elementPosition = emailElement.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: elementPosition - 300, behavior: "smooth" });
+    flashInput(emailElement)
+    document.getElementById("get-user-details").click();
+    
+}
+
+async function fetchSignins() {
+    try {
+        const token = localStorage.getItem("authToken"); // Retrieve stored auth token
+        if (!token) {
+            alert("You must be logged in to view sign-ins!");
+            return;
+        }
+
+        const response = await fetch(`${apiUrl}/logs/signins`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch sign-in logs");
+        }
+
+        const data = await response.json();
+        displaySignins(data.logs); // Call function to update HTML
+
+    } catch (error) {
+        console.error("Error fetching sign-ins:", error);
+        alert("Error fetching sign-in logs.");
     }
 }
 
-function hideForms(){
-    const formb = document.getElementById("changeDetailForm");
-    const forma = document.getElementById("changeDetailFormBinary");
+function displaySignins(logs) {
+    const tableBody = document.getElementById("signinLogsTableBody");
+    tableBody.innerHTML = ""; // Clear old logs
 
-    formb.style.display = 'none';
-    forma.style.display = 'none';
+    logs.forEach((log, index) => {
+        const row = document.createElement("tr");
+
+        const indexCell = document.createElement("td");
+        indexCell.textContent = index + 1;
+
+        const logCell = document.createElement("td");
+        logCell.textContent = log;
+
+        row.appendChild(indexCell);
+        row.appendChild(logCell);
+        tableBody.appendChild(row);
+    });
 }
+
+
+
+//fetch Recent Server Logs
+async function fetchLogs() {
+    try {
+        const response = await fetch("/recentLogs", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                // Include authentication token if needed
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch logs");
+        }
+
+        const data = await response.json();
+        
+        console.log(data)
+        // Get the log container element
+        const logContainer = document.getElementById("terms-text");
+        logContainer.innerHTML = ""; // Clear previous logs
+
+        // Loop through each log and create a new div element for it
+        data.logs.forEach(log => {
+            const logLine = document.createElement("div");
+            logLine.textContent = log;
+            logContainer.appendChild(logLine);
+        });
+
+        // Show the logs in a dismissable modal
+        await showDismissAlert()
+        logContainer.innerHTML = ""; // Clear logs after modal is dismissed
+
+    } catch (error) {
+        console.error("Error fetching logs:", error);
+        
+    }
+}
+
+
+async function fetchIssues() {
+    try {
+        const response = await fetch("/issues/getOpen", {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
+        });
+
+        const issues = await response.json();
+        const tableBody = document.querySelector("#issuesTable tbody");
+        console.log(issues)
+        tableBody.innerHTML = ""; // Clear existing rows
+
+        issues.forEach(issue => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${issue.email}</td>
+                <td>${issue.description}
+                <td>${new Date(issue.createdAt).toLocaleString()}</td>
+                <td>
+                    <button class="resolve-btn">resolve</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+            // Attach event listeners 
+            row.querySelector(".resolve-btn").addEventListener("click", () => resolveIssue(issue.id));
+        });
+    } catch (error) {
+        console.error("Error fetching issues:", error);
+    }
+}
+
+async function resolveIssue(issueId) {
+
+    const confirmation = await showConfirmAlert("Are you sure you want to resolve this issue?");
+    
+    if (!confirmation) {
+        return;
+
+    }
+    try {
+        const response = await fetch(`/issues/resolve/${issueId}`, {
+            method: "PATCH",
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+        fetchIssues(); // Refresh the table
+    } catch (error) {
+        console.error("Error resolving issue:", error);
+    }
+}
+
+async function downloadLogs() {
+    try {
+        // Fetch the auth token from local storage or cookies
+        const token = localStorage.getItem("authToken"); // Adjust if stored elsewhere
+
+        if (!token) {
+            alert("You are not authenticated. Please log in.");
+            return;
+        }
+
+        // Fetch logs from the server with authentication
+        const response = await fetch("/logs/download/serverLog", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to download logs");
+        }
+
+        // Convert the response to a blob (binary large object)
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        // Create a temporary download link
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "server_logs.txt"; // File name for the downloaded log
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Error downloading logs:", error);
+    }
+}
+
+function flashInput(input) {
+    
+    if (input) {
+        input.classList.add("flash-input");
+        setTimeout(() => {
+            input.classList.remove("flash-input");
+        }, 2000); // Matches animation duration
+    }
+}
+
+function downloadSignedInUsers() {
+    const token = localStorage.getItem("authToken");
+
+    fetch("/admin/downloadSignedInUsers", {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Failed to download");
+        return response.blob();
+    })
+    .then(blob => {
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "signedInUsers.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    })
+    .catch(error => console.error("Download failed:", error));
+}
+
+
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem("authToken");
 
-    if (!token) {
-        window.location.href = "index.html"; // Redirect if not logged in
-        return;
-    }
+    const addOrUpdateAlert = async(level, message) => {
 
-    try {
-        const response = await fetch("http://localhost:3000/admin", {
-            method: "GET",
-            headers: {
-                "Authorization": token, // Send token to backend
-                "Content-Type": "application/json",
-            },
-        });
-
-        if (response.status === 403) {
-            alert("Unauthorized access");
-            localStorage.removeItem("authToken"); // Remove token
-            window.location.href = "index.html"; // Redirect to login page
-        } else if (!response.ok) {
-            window.localStorage.removeItem("authToken");
-            alert("Failed to fetch user data");
-        }
-
-        const user = await response.json();
-        document.getElementById("name").textContent = user.name;
-        document.getElementById("email").textContent = user.email;
-        document.getElementById("organisation").textContent = user.organisation;
-        window.currentAdminEmail = user.email;
-    } catch (error) {
-        console.error("Error fetching user data:", error);
-        //window.location.href = "index.html"; // Redirect if token is invalid
-    }
-});
-
-document.getElementById("logout").addEventListener("click", () => {
-    localStorage.removeItem("authToken"); // Remove token
-    window.location.href = "index.html"; // Redirect to login page
-});
-
-// Wait for the DOM to load
-document.addEventListener('DOMContentLoaded', () => {
-  
-    const form = document.getElementById('getUserForm');
-  
-    // Add an event listener for the submit event
-    form.addEventListener('submit', async function(event) {
-      event.preventDefault(); // Prevent the form from submitting the traditional way
-  
-      // Create a FormData object from the form
-      const formData = new FormData(form);
-  
-      // You can now access the form data like this:
-      const email = formData.get('email');
-
-      //Hide forms
-      hideForms();
-
-      console.log('Getting data for:', email);
-
-      window.LoadedUserData = await getUserDetails(email);
-      const data = window.LoadedUserData;
-
-      console.log('User Details:', data);
-    
-      if (data === null) {
-        console.log('User not found');
-        document.getElementById("userDetailsTitle").textContent = "Data not found";
-        return;
-      }
-
-      window.LoadedUserEmail = data.email;
-
-      document.getElementById("userDetailsTitle").style.display = "none"
-      document.getElementById("changeName").textContent = data.name;
-      document.getElementById("changeEmail").textContent = data.email;
-      document.getElementById("changeOrganisation").textContent = data.organisation;
-      document.getElementById("changePhoneNumber").textContent = data.phoneNumber;
-      document.getElementById("changeSignedIn").textContent = data.signed_in;
-      document.getElementById("changeAdmin").textContent = data.admin;
-      document.getElementById("deleteUser").textContent = "Delete User";
-      document.getElementById("changePassword").textContent = "Change Password";
-    });
-
-    // Add event listeners for the buttons
-    document.getElementById("deleteUser").addEventListener("click", async () => {
-        console.log("Delete User button clicked");
-        token = localStorage.getItem("authToken");
-        userEmail = window.LoadedUserEmail;
-
-        if(!confirm("Are you sure you want to delete this user?")) {
+        const confirm = await showConfirmAlert("Are you sure you want to send this alert. This message will appear for all users when they log in!")
+        if (!confirm) {
             return;
         }
+        try {
+            // Retrieve auto token
+            const token = localStorage.getItem("authToken");
         
-        const response = await fetch("http://localhost:3000/admin/deleteUser", {
-            method: "POST",
-            headers: {
-                 "Content-Type": "application/json",
-                 "Authorization": `Bearer ${token}`
-             },
-             body: JSON.stringify({ email: userEmail})
-         });
-        
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("User updated successfully!" + result.message);
-            if (userEmail === window.currentAdminEmail) {
-                window.localStorage.removeItem("authToken");
-                window.location.href = "index.html";
+            // Validate level value
+            if (!['info', 'warning', 'critical'].includes(level)) {
+                throw new Error('Level must be either "info", "warning", or "critical"');
             }
+        
+            const response = await fetch(`${apiUrl}/admin/addOrUpdateAlert`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`  // Ensure you have admin auth
+                },
+                body: JSON.stringify({ message, level })
+            });
+        
+            const result = await response.json();
+            if (response.ok) {
+                showSuccess("Alert updated","alert-message")
+            } else {
+                showError("Error: " + result.message,"alert-message");
+            }
+        } catch(error) {
+            showError(error, "alert-message")
+        }
+    }
 
-        } else {
-            alert("Error: " + result.message);
+    const handleFormSubmit = async (event, formId, email, field, newValue1, newValue2) => {
+        event.preventDefault();
+
+        if (newValue1 !== newValue2) {
+            showError("Values do not match");
+            return;
         }
 
+        console.log(email,field,newValue1,newValue2)
+        const response = await fetch(`${apiUrl}/admin/updateUser`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+            },
+            body: JSON.stringify({email, field, newValue1, newValue2 })
+        });
 
-    });
+        const result = await response.json();
+        
+        
 
-    document.getElementById("changePassword").addEventListener("click", () => {
-        window.selectedField = 'password';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Name button clicked");
-        showChangeForm("Enter new password");
-    });
+        if (response.ok) {
+            showSuccess("updated successfully!","change-user-message");
+            handleUserDetailFetch(event,window.LoadedUserData.email,false)
+        } else {
+            console.log(result.message)
+            showError("Error: " + result.message, "change-user-message");
+        }
+    };
 
-    document.getElementById("changeName").addEventListener("click", () => {
-        window.selectedField = 'name';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Name button clicked");
-        showChangeForm("Enter New Name");
-    });
+    const deleteAlert = async() => {
 
-    document.getElementById("changeEmail").addEventListener("click", () => {
-        window.selectedField = 'email';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Email button clicked");
-        showChangeForm("Enter New Email");
-    });
+        const confirm = await showConfirmAlert("Are you sure you want to delete this alert. This will remove it for all users!")
+        if (!confirm) {
+            return;
+        }
 
-    document.getElementById("changeOrganisation").addEventListener("click", () => {
-        window.selectedField = 'organisation';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Organisation button clicked");
-        showChangeForm("Enter New Organisation");
-    });
+        const token = localStorage.getItem("authToken");
 
-    document.getElementById("changePhoneNumber").addEventListener("click", () => {
-        window.selectedField = 'phoneNumber';
-        const value = window.LoadedUserData[window.selectedField];
-        console.log('Selected Field Value:', value);
-        console.log("Change Phone Number button clicked");
-        showChangeForm("Enter New Phone Number");
-    });
+        const response = await fetch(`${apiUrl}/admin/deleteAlert`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`  // Ensure admin authentication
+            }
+        });
+    
+        const result = await response.json();
+        if (response.ok) {
+            showSuccess("Alert deleted successfully!","alert-message");
+        } else {
+            showError("Error: " + result.message, "alert-message");
+        }
+    }
+
+    const handleUserDetailFetch = async (event, email,verbose) => {
+
+        event.preventDefault(); // Prevent the form from refreshing the page
+        const token = localStorage.getItem("authToken");
+    
+        
+            const response = await fetch(`${apiUrl}/admin/getUser?email=${encodeURIComponent(email)}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+    
+            const user = await response.json();
+    
+            if (response.ok && verbose) {
+                showSuccess("User Found","fetch-message")
+            } else {
+                showError(user.message,"fetch-message")
+            }
+
+            
+            window.LoadedUserData = user;
+
+            document.getElementById("changeName").textContent = user.name;
+            document.getElementById("changeEmail").textContent = user.email;
+            document.getElementById("changeOrganisation").textContent = user.organisation;
+            document.getElementById("changePhoneNumber").textContent = user.phoneNumber;
+
+            const signedInElement = document.getElementById("changeSignedIn");
+            signedInElement.textContent = user.isSignedIn ? "Yes" : "No";
+            signedInElement.style.backgroundColor = user.isSignedIn ? "green" : "red";
+
+            const adminElement = document.getElementById("changeAdmin");
+            adminElement.textContent = user.isAdmin ? "Yes" : "No";
+            adminElement.style.backgroundColor = user.isAdmin ? "green" : "red";
+
+            document.getElementById("deleteUser").textContent = "Delete Account";
+            document.getElementById("changePassword").textContent = "Change Password";
+    }
+
+    const fetchAlert = async () => {
+
+        // Retrieve auto token
+        const token = localStorage.getItem("authToken");
+
+        try {
+            const response = await fetch(`${apiUrl}/alert/get`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`  // Use a valid user token
+                }
+            });
+    
+            const result = await response.json();
+
+            if (response.ok) {
+                document.getElementById("alertSeverity").value = result.level;
+                document.getElementById("alertText").value = result.message + " \n \nThis is the current alert, delete it and resubmit to specify another alert ..."
+            } else {
+                console.log(result.message);
+            }
+        } catch (error) {
+            console.error("Error fetching alert:", error);
+        }
+    }
+    
+    const fetchAdminDetails = async () => {
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+            window.location.href = "index.html";
+            console.log("Invalid token")
+            return;
+        }
+
+        try {
+            const response = await fetch(`${apiUrl}/user`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                throw new Error("Failed to fetch user data" + errorMessage);
+            }
+
+            const user = await response.json();
+            window.LoadedAdminUserData = user;
+
+            document.getElementById("name").textContent = user.name;
+            document.getElementById("email").textContent = user.email;
+            document.getElementById("organisation").textContent = user.organisation;
+
+            if (user.isSignedIn){
+                document.getElementById("signedInLabel").textContent = "Yes";
+            } else {
+                document.getElementById("signedInLabel").textContent = "No";
+            }
+
+
+            if (!user.isAdmin) {
+                alert("Only admins can access this page")
+                localStorage.removeItem("authToken");
+                window.location.href = "index.html";
+            }
+        } catch (error) {
+            alert("Error fetching user data:", error);
+            localStorage.removeItem("authToken");
+            window.location.href = "index.html";
+        }
+   }
+
+    const addChangeListener = (elementId, field, labelText) => {
+        document.getElementById(elementId).addEventListener("click", () => {
+            window.selectedField = field;
+            showChangeForm(labelText);
+        });
+    };
+
+    addChangeListener("changePassword", 'password', "Enter new password");
+    addChangeListener("changeName", 'name', "Enter New Name");
+    addChangeListener("changeEmail", 'email', "Enter New Email");
+    addChangeListener("changeOrganisation", 'organisation', "Enter New Organisation");
+    addChangeListener("changePhoneNumber", 'phoneNumber', "Enter New Phone Number");
 
     document.getElementById("changeSignedIn").addEventListener("click", () => {
-        window.selectedField = 'signed_in';
-        const value = window.LoadedUserData[window.selectedField];
+        window.selectedField = 'isSignedIn';
         showChangeFormBinary("Toggle Signed In");
-        console.log("Change Signed In button clicked");
     });
 
     document.getElementById("changeAdmin").addEventListener("click", () => {
-        window.selectedField = 'admin';
-        const value = window.LoadedUserData[window.selectedField];
+        window.selectedField = 'isAdmin';
         showChangeFormBinary("Toggle Admin");
-        console.log('Selected Field Value:', value);
-        console.log("Change Admin button clicked");
-        
     });
 
 
-    document.getElementById("changeDetailForm").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Prevent form refresh
-    
-        const token = localStorage.getItem("authToken"); // Get the admin token
-        const userEmail = window.LoadedUserEmail;
-        const field = window.selectedField;
+    document.getElementById("deleteUser").addEventListener("click", async () => {
+        const token = localStorage.getItem("authToken"); // Admin token
 
-        const newValue1 = document.getElementById("changeDetailInput1").value;
-        const newValue2 = document.getElementById("changeDetailInput2").value;
-
-        if (newValue1 !== newValue2) {
-            alert("Values do not match");
+        const confirmation = confirm("Are you sure you want to delete this user?");
+        if (!confirmation) {
             return;
         }
-        
-        console.log('Updating user:', userEmail, field, newValue1);
 
-        const response = await fetch("http://localhost:3000/admin/updateUser", {
-           method: "POST",
-           headers: {
+    try {
+        const response = await fetch(`${apiUrl}/admin/deleteUser`, {
+            method: "DELETE",
+            headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({ email: userEmail, field, newValue: newValue1 })
+            body: JSON.stringify({ email: window.LoadedUserData.email })
         });
-    
-        const result = await response.json();
+
+        const data = await response.json();
+
         if (response.ok) {
-            alert("User updated successfully!");
-            window.location.reload(); // Refresh the page
+            console.log("User deleted:", data);
+            showSuccess("User deleted successfully!","change-user-message");
         } else {
-            alert("Error: " + result.message);
+            showError("Error: " + data.message, "change-user-message");
         }
-
-
-
-        
-    });
-
-    document.getElementById("changeDetailFormBinary").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Prevent form refresh
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        showError("Error: " + error, "change-user-message")
+    }
     
-        const token = localStorage.getItem("authToken"); // Get the admin token
-        const userEmail = window.LoadedUserEmail;
-        const field = window.selectedField;
-
-        const newValue = document.getElementById("toggle").checked;
-        
-        console.log('Updating user:', userEmail, field, newValue);
-
-        const response = await fetch("http://localhost:3000/admin/updateUser", {
-           method: "POST",
-           headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ email: userEmail, field, newValue: newValue })
-        });
-    
-        const result = await response.json();
-        if (response.ok) {
-            alert("User updated successfully!");
-            window.location.reload(); // Refresh the page
-        } else {
-            alert("Error: " + result.message);
-        }
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const menuToggle = document.querySelector(".menu-toggle");
-        const navLinks = document.querySelector(".nav-links");
-      
-        menuToggle.addEventListener("click", () => {
-          navLinks.classList.toggle("active");
-        });
-      });
-    
-      document.getElementById("qr-redirect").addEventListener("click", () => {
-        window.location.href = "qr-scanner.html";
     });
 
 
+    document.getElementById("changeDetailForm").addEventListener("submit", (event) => {
+        const newValue1 = document.getElementById("changeDetailInput1").value;
+        const newValue2 = document.getElementById("changeDetailInput2").value;
+        handleFormSubmit(event, "changeDetailForm",window.LoadedUserData.email, window.selectedField, newValue1, newValue2);
+    });
+
+    document.getElementById("changeDetailFormBinary").addEventListener("submit", (event) => {
+        const newValue1 = document.getElementById("toggle").checked;
+        handleFormSubmit(event, "changeDetailFormBinary",window.LoadedUserData.email, window.selectedField, newValue1, newValue1);
+    });
+
+    document.getElementById("logout").addEventListener("click", () => {
+        localStorage.removeItem("authToken");
+        window.location.href = "index.html";
+    });
+
+    document.getElementById("getUserForm").addEventListener("click", (event) => {
+        const email = document.getElementById("getEmail").value
+        handleUserDetailFetch(event,email,true);
+    });
+
+    document.getElementById("qr-redirect").addEventListener("click", () => {
+        console.log("redirect")
+        window.location.href = "/qr-scanner.html"
+    })
+
+    document.getElementById("submitAlert").addEventListener("click", (event) => {
+        const alertLevel = document.getElementById("alertSeverity").value
+        const alertText = document.getElementById("alertText").value
+        addOrUpdateAlert(alertLevel, alertText)
+    });
+
+    document.getElementById("deleteAlert").addEventListener("click", (event) => {
+        deleteAlert()
+    });
+
+    document.getElementById("fetch-all-users-button").addEventListener("click", fetchUsers);
+    document.getElementById("fetch-all-issues-button").addEventListener("click", fetchIssues)
+    document.getElementById("fetch-recent-logs").addEventListener("click", fetchLogs);
+    document.getElementById("download-logs").addEventListener("click", downloadLogs);
+    document.getElementById("get-site-log").addEventListener("click", fetchSignins)
+    document.getElementById("download-signedin").addEventListener("click", downloadSignedInUsers);
+
+
+
+
+    fetchAdminDetails();
+    fetchQRCode();
+    fetchAlert();
+
+    const menuToggle = document.querySelector(".menu-toggle");
+    const navLinks = document.querySelector(".nav-links");
+
+    menuToggle.addEventListener("click", () => {
+        navLinks.classList.toggle("active");
+    });
 });
-
-// Call this function when the page loads
-document.addEventListener("DOMContentLoaded", fetchQRCode);
 
 
   

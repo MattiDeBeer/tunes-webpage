@@ -9,6 +9,22 @@
 </head>
 <body>
 
+  <!-- Fullscreen Modal for Terms and Conditions -->
+  <div id="termsModal" class="terms-modal">
+    <div style="z-index: 1001;">
+        <h2 style="color: white;">Important Information</h2>
+        <div class="terms-box">
+            <p id = "terms-text">
+            </p>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: auto; padding: 20px; gap: 10px;">
+          <button id="acceptBtn" style="margin-top: 10px; background-color: rgb(255, 0, 0); display: none;">Continue</button>
+          <button id="declineBtn" style="margin-top: 10px; background-color: rgb(59, 171, 37); display: none;">Cancel</button>
+          <button id="dismissButton">Dismiss</button>
+        </div>
+    </div>
+</div>
+
   <div class="dashboard-wrapper">
    <!-- Navigation Bar -->
    <nav class="navbar">
@@ -87,7 +103,7 @@
           </div>
           <button type="submit">Update User</button>
       </form>
-
+      <p id="message" class="message"></p>
       </div>
 
 

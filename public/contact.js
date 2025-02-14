@@ -1,29 +1,51 @@
+const apiUrl = window.location.origin;
+
+function showMessage(message, type) {
+    const messageElement = document.getElementById("message");
+    messageElement.textContent = message;
+    messageElement.classList.add(`show-${type}`);
+
+    setTimeout(() => {
+        messageElement.classList.remove(`show-${type}`);
+    }, 3000);
+}
+
+function showError(message) {
+    showMessage(message, "error");
+}
+
+function showSuccess(message) {
+    showMessage(message, "success");
+}
+
 document.getElementById("submitMessage").addEventListener("click", async function() {
     const message = document.getElementById("messageBox").value;
     const email = document.getElementById("email").value;
 
     if (!email) {
-        const messageStatus = document.getElementById("messageStatus");
-        messageStatus.textContent = "Please provide an email address";
-        messageStatus.style.color = "red";
-        return;
+        showError("Please provide an email address");
+        return
     }
 
     if (!message.trim()) {
-        const messageStatus = document.getElementById("messageStatus");
-        messageStatus.textContent = "Please provide a messege";
-        messageStatus.style.color = "red";
+        showError("Please provide a messege");
         return;
     }
 
-    const response = await fetch("http://localhost:3000/contact", {
+    const response = await fetch(`${apiUrl}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({email, message})
+        body: JSON.stringify({ email: email, message: message })
     });
 
     const data = await response.json();
-    document.getElementById("messageStatus").textContent = data.message;
+
+    if (response.ok) {
+        showSuccess("Message sent successfully");
+    } else {
+        showError("Error: " + data.message);
+    }
+    
 
 });
 

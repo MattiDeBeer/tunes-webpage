@@ -1,3 +1,5 @@
+const apiUrl = window.location.origin;
+
 function showError(message) {
     const errorMessage = document.getElementById("message");
     errorMessage.textContent = message; // Update text
@@ -10,7 +12,7 @@ function showError(message) {
   }
 
 
-  function showSucess(message) {
+function showSucess(message) {
     const errorMessage = document.getElementById("message");
     errorMessage.textContent = message; // Update text
     errorMessage.classList.add("show-sucess"); // Add fade-in effect
@@ -38,7 +40,7 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
   
     try {
       // Make the fetch request to the backend server
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch(`${apiUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({email, password}),
@@ -57,14 +59,15 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
   
       // If login is successful, handle the response (e.g., save token, redirect, etc.)
       const data = await response.json(); // Parse the successful response
-      showSucess("Login successful");
+      console.log('Success:', data);
       
       // Optionally, redirect to the user profile page after successful login
       // Store token in localStorage
       localStorage.setItem("authToken", data.token);
 
       // Redirect to dashboard
-      window.location.href = "dashboard.html";
+      console.log(data.redirectUrl);
+      window.location.href = data.redirectUrl;
 
 
     } catch (error) {

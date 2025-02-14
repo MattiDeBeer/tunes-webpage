@@ -1,35 +1,26 @@
-function showError(message) {
+const apiUrl = window.location.origin;
+
+function showMessage(message, type) {
     const errorMessage = document.getElementById("message");
     errorMessage.textContent = message; // Update text
-    errorMessage.classList.add("show-error"); // Add fade-in effect
+    errorMessage.classList.add(`show-${type}`); // Add fade-in effect
   
     // Remove message after 3 seconds (optional)
     setTimeout(() => {
-      errorMessage.classList.remove("show-error");
+      errorMessage.classList.remove(`show-${type}`);
     }, 3000);
-  }
+}
 
-  function showSucess(message) {
-    const errorMessage = document.getElementById("message");
-    errorMessage.textContent = message; // Update text
-    errorMessage.classList.add("show-sucess"); // Add fade-in effect
-  
-    // Remove message after 3 seconds (optional)
-    setTimeout(() => {
-      errorMessage.classList.remove("show-sucess");
-    }, 3000);
-  }
-
-function showDetails(){
+function showDetails() {
     if (!window.loadedUser) {
-        console.log("No user loaded")
-        return
+        console.log("No user loaded");
+        return;
     }
 
     document.getElementById("userName").textContent = "Name: " + window.loadedUser.name;
     document.getElementById("userEmail").textContent = "Email: " + window.loadedUser.email;
-    document.getElementById("userOrganisation").textContent = "Organisaton: " + window.loadedUser.organisation;
-    document.getElementById("userSignedIn").textContent = "Signed in: " + window.loadedUser.signed_in;
+    document.getElementById("userOrganisation").textContent = "Organisation: " + window.loadedUser.organisation;
+    document.getElementById("userSignedIn").textContent = "Signed in: " + window.loadedUser.isSignedIn;
     document.getElementById("qr-result").style.display = "block";
 }
 
@@ -37,7 +28,7 @@ function hideDetails() {
     document.getElementById("qr-result").style.display = "none";
 }
 
-//navbar code
+// Navbar code
 document.addEventListener("DOMContentLoaded", () => {
     const menuToggle = document.querySelector(".menu-toggle");
     const navLinks = document.querySelector(".nav-links");
@@ -45,11 +36,56 @@ document.addEventListener("DOMContentLoaded", () => {
     menuToggle.addEventListener("click", () => {
       navLinks.classList.toggle("active");
     });
-  });
+});
 
 // QR Scanner code
 document.addEventListener("DOMContentLoaded", async function () {
-    async function onScanSuccess(decodedText, decodedResult) {
+
+    async function getUserDetails(UUID) {
+        const token = localStorage.getItem("authToken");
+
+        try {
+
+            const response = await fetch(`${apiUrl}/admin/fetchUserDetailsUUID?uuid=${UUID}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+    
+            const result = await response.json();
+    
+            if (response.status !== 200) {
+                showMessage("Failed to get details: " + result.message, "error");
+                document.getElementById("resume-button").style.display = "block";
+                return false;
+            }
+    
+            console.log('Success:', result);
+    
+            if (result.isSignedIn) {
+                document.getElementById("sign-button").style.backgroundColor = "red";
+                document.getElementById("sign-button").textContent = "Sign user out";
+            } else {
+                document.getElementById("sign-button").style.backgroundColor = "green";
+                document.getElementById("sign-button").textContent = "Sign user in";
+            }
+            
+            window.loadedUser = result;
+            document.getElementById("sign-button").style.display = "block";
+            document.getElementById("resume-button").style.display = "block";
+            showDetails();
+            return true
+            
+        } catch(err) {
+            console.error("Error fetching user details:", err);
+            showMessage("Error fetching user details: " + err, "error")
+            }
+        
+    }
+
+
+    async function onScanSuccess(decodedText, decodedResult, verbose) {
         const token = localStorage.getItem("authToken");
         
         try {
@@ -59,48 +95,14 @@ document.addEventListener("DOMContentLoaded", async function () {
             console.error("Failed to stop the scanner:", err);
         }
 
-        
-        // Send scanned QR code data to the server (optional)
-        const response = await fetch("/process-qr", {
-                method: "POST",
-                headers: { 
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json" },
-                body: JSON.stringify({ qrData: decodedText }),
-   });
-        const result = await response.json();
-        //console.log("Server Response:", result);
 
-        if (response.status !== 200) {
-            showError("Failed to get details: " + result.message);
-            document.getElementById("resume-button").style.display = "block";
-            return;
-        }
-
-        console.log('Success:', result);
-        // Perform additional actions based on the successful response
-        // For example, you can update the UI or redirect the user
-        showSucess("QR code scanned successfully");
-
-        console.log(result.signed_in)
-
-        if (result.signed_in){
-            document.getElementById("sign-button").style.backgroundColor = "red";
-            document.getElementById("sign-button").textContent = "Sign user out"
+        if (getUserDetails(decodedText)) {
+            showMessage("QR code scanned successfully", "success");
         } else {
-            document.getElementById("sign-button").style.backgroundColor = "green";
-            document.getElementById("sign-button").textContent = "Sign user in"
+            showMessage("QR scan failed", "error")
         }
-        
-        window.loadedUser = result
-        document.getElementById("sign-button").style.display = "block"
-        document.getElementById("resume-button").style.display = "block";
-        showDetails()
-
-
-
-        
     }
+        
 
     let qrScanner = new Html5Qrcode("qr-reader");
     qrScanner.start(
@@ -117,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 onScanSuccess
             );
             console.log("QR scanner resumed.");
-            document.getElementById("qr-result").style.display = "none"
+            hideDetails();
             document.getElementById("resume-button").style.display = "none";
             document.getElementById("sign-button").style.display = "none";
         } catch (err) {
@@ -125,47 +127,40 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    
     document.getElementById("sign-button").addEventListener("click", async function(event) {
         event.preventDefault(); // Prevent form refresh
     
         const token = localStorage.getItem("authToken"); // Get the admin token
-        const userEmail = window.loadedUser.email;
-        field = "signed_in";
+        const email = window.loadedUser.email;
+        const field = "isSignedIn";
+        const newValue1 = !window.loadedUser.isSignedIn;
+        const newValue2 = newValue1
 
-        if (window.loadedUser.signed_in) {
-            newValue = false;
-        } else {
-            newValue = true;
-        }  
-            
-        console.log('Updating user:', userEmail, field, newValue);
+        console.log('Updating user:', userEmail, field, newValue1, newValue2);
 
-        const response = await fetch("http://localhost:3000/admin/updateUser", {
-           method: "POST",
-           headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-                
+        const response = await fetch(`${apiUrl}/admin/updateUser`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
             },
-            body: JSON.stringify({ email: userEmail, field, newValue: newValue })
+            body: JSON.stringify({email, field, newValue1, newValue2 })
         });
+
     
         const result = await response.json();
+
         if (response.ok) {
-            //alert("User updated successfully!");
-            if (newValue) {
-                showSucess("User signed in")
-            } else {
-                showSucess("User sigend out")
-            }
+            showMessage(newValue1 ? "User signed in" : "User signed out", "success");
+            await getUserDetails(window.loadedUser.userId)
+            showDetails();
+
         } else {
-            showError("Error : " + result.message)
-            //alert("Error: " + result.message);
+            showMessage("Error: " + result.message, "error");
         }        
     });
 });
 
 document.getElementById("return-to-dashboard").addEventListener("click", () => {
-    window.location.href = "qr-scanner.html";
+    window.location.href = "admin-dashboard.html";
 });
