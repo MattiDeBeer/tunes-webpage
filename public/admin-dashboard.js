@@ -220,7 +220,7 @@ async function fetchSignins() {
 }
 
 function displaySignins(logs) {
-    const tableBody = document.getElementById("signinLogsTableBody");
+    const tableBody = document.getElementById("siteLogsTableBody");
     tableBody.innerHTML = ""; // Clear old logs
 
     logs.forEach((log, index) => {
@@ -243,7 +243,7 @@ function displaySignins(logs) {
 //fetch Recent Server Logs
 async function fetchLogs() {
     try {
-        const response = await fetch("/recentLogs", {
+        const response = await fetch(`${apiUrl}/recentLogs`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -271,6 +271,7 @@ async function fetchLogs() {
         });
 
         // Show the logs in a dismissable modal
+        document.getElementById("alert-title").textContent = "Server Logs";
         await showDismissAlert()
         logContainer.innerHTML = ""; // Clear logs after modal is dismissed
 
@@ -283,7 +284,7 @@ async function fetchLogs() {
 
 async function fetchIssues() {
     try {
-        const response = await fetch("/issues/getOpen", {
+        const response = await fetch(`${apiUrl}/issues/getOpen`, {
             method: "GET",
             headers: { "Authorization": `Bearer ${localStorage.getItem("authToken")}` }
         });
@@ -314,14 +315,15 @@ async function fetchIssues() {
 
 async function resolveIssue(issueId) {
 
-    const confirmation = await showConfirmAlert("Are you sure you want to resolve this issue?");
+    document.getElementById("alert-title").textContent = "Are you sure?";
+    const confirmation = await showConfirmAlert("Please make sure you have resolved this issue, and that you have notified the user that this issue has been resolved.");
     
     if (!confirmation) {
         return;
 
     }
     try {
-        const response = await fetch(`/issues/resolve/${issueId}`, {
+        const response = await fetch(`${apiUrl}/issues/resolve/${issueId}`, {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
@@ -347,7 +349,7 @@ async function downloadLogs() {
         }
 
         // Fetch logs from the server with authentication
-        const response = await fetch("/logs/download/serverLog", {
+        const response = await fetch(`${apiUrl}/logs/download/serverLog`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -377,6 +379,21 @@ async function downloadLogs() {
     }
 }
 
+function fetchUserStats() {
+    const token = localStorage.getItem("authToken");
+
+    fetch(`${apiUrl}/admin/userStats`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("signed-in-users").innerText = data.signedInUsers;
+        document.getElementById("total-users").innerText = data.totalUsers;
+    })
+    .catch(error => console.error("Error fetching user stats:", error));
+}    
+
 function flashInput(input) {
     
     if (input) {
@@ -390,7 +407,7 @@ function flashInput(input) {
 function downloadSignedInUsers() {
     const token = localStorage.getItem("authToken");
 
-    fetch("/admin/downloadSignedInUsers", {
+    fetch(`${apiUrl}/admin/downloadSignedInUsers`, {
         method: "GET",
         headers: { "Authorization": `Bearer ${token}` }
     })
@@ -409,6 +426,45 @@ function downloadSignedInUsers() {
     .catch(error => console.error("Download failed:", error));
 }
 
+async function fetchSignedInUsers() {
+    const token = localStorage.getItem("authToken");
+
+    fetch(`${apiUrl}/admin/signedInUsers`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(response => response.json())
+    .then(async data => {
+        const tableBody = document.getElementById("signinLogsTableBody");
+        const tableDiv = document.getElementById("table-div")
+        document.getElementById("alert-title").textContent = "Users currently on site";
+        
+        tableBody.innerHTML = ""; // Clear previous data
+        tableDiv.style.display = "block";
+
+        data.forEach(user => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.organisation}</td>
+                <td>${user.phoneNumber}</td>
+                <td>${user.email}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        await showDismissAlert();
+        tableBody.innerHTML = ""; // Clear previous data
+        tableDiv.style.display = "none";
+        
+
+
+
+    })
+
+
+    .catch(error => console.error("Error fetching signed-in users:", error));
+}
 
 
 
@@ -416,6 +472,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const addOrUpdateAlert = async(level, message) => {
 
+        document.getElementById("alert-title").textContent = "Are you sure?";
         const confirm = await showConfirmAlert("Are you sure you want to send this alert. This message will appear for all users when they log in!")
         if (!confirm) {
             return;
@@ -481,9 +538,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const deleteAlert = async() => {
-
-        const confirm = await showConfirmAlert("Are you sure you want to delete this alert. This will remove it for all users!")
-        if (!confirm) {
+        document.getElementById("alert-title").textContent = "Are you sure?";
+        const confirmation = await showConfirmAlert("Are you sure you want to delete this alert. This will remove it for all users!")
+        if (!confirmation) {
             return;
         }
 
@@ -647,7 +704,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("deleteUser").addEventListener("click", async () => {
         const token = localStorage.getItem("authToken"); // Admin token
 
-        const confirmation = confirm("Are you sure you want to delete this user?");
+        document.getElementById("alert-title").textContent = "Are you sure?";
+        const confirmation = showConfirmAlert("Are you sure you want to delete this user?");
         if (!confirmation) {
             return;
         }
@@ -720,6 +778,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("download-logs").addEventListener("click", downloadLogs);
     document.getElementById("get-site-log").addEventListener("click", fetchSignins)
     document.getElementById("download-signedin").addEventListener("click", downloadSignedInUsers);
+    document.getElementById("display-signed-in-users").addEventListener("click", fetchSignedInUsers)
 
 
 
@@ -727,6 +786,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     fetchAdminDetails();
     fetchQRCode();
     fetchAlert();
+    fetchUserStats();
 
     const menuToggle = document.querySelector(".menu-toggle");
     const navLinks = document.querySelector(".nav-links");

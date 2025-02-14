@@ -12,8 +12,27 @@
    <!-- Fullscreen Modal for Terms and Conditions -->
    <div id="termsModal" class="terms-modal">
     <div style="z-index: 1001;">
+        <h2 id = "alert-title" style="color: white;"></h2>
         <div id="terms-text">
         </div>
+
+        
+        <div id="table-div" style="display: none;" class="sign-in-table-container">
+          <table border="1" class="sign-in-table">
+              <thead>
+                  <tr>
+                      <th>Name</th>
+                      <th>Organisation</th>
+                      <th>Phone Number</th>
+                      <th>Email</th>
+                  </tr>
+              </thead>
+              <tbody id="signinLogsTableBody">
+                  <!-- Logs will be inserted here -->
+              </tbody>
+          </table>
+        </div>
+
         <div style="display: flex; flex-direction: column;">
         <button id="acceptBtn" style="margin-top: 10px; background-color: rgb(255, 0, 0);">Continue</button>
         <button id="declineBtn" style="margin-top: 10px; background-color: rgb(46, 156, 24);">Cancel</button>
@@ -35,8 +54,13 @@
     <button class="menu-toggle">&#9776;</button>
   </nav>
 
+
   <!-- Parent Container -->
   <div class="dashboard-wrapper">
+
+    <div class="admin-container-flex">
+      <h1>General</h1>
+    </div>
 
     <div class="dashboard-container">
       <!-- User Info Column -->
@@ -45,6 +69,8 @@
         <p>Email: <span id="email">Loading...</span></p>
         <p>Organisation: <span id="organisation">Loading...</span></p>
         <p>Signed in: <span id="signedInLabel">Loading...</span></p>
+        <p>There are currently <span id="signed-in-users" style="color: rgb(5, 155, 5);"">Loading ...</span> people on the festival site</p>
+        <p>There are <span id="total-users">Loading ...</span> Regisered users</p>
         <div style="margin-top: auto">
           <button id = "qr-redirect">QR scanner</button>
           <button id="logout", class = logout-button>Logout</button>
@@ -57,6 +83,10 @@
       <img id="qrCodeImg" alt="Your QR Code" style="margin-top: 20px;">
       </div>
 
+    </div>
+
+    <div class="admin-container-flex">
+      <h1>Edit user details</h1>
     </div>
 
     <!-- Empty Box Below Dashboard Container -->
@@ -125,7 +155,7 @@
     </div>
     </div>
 
-    <div class="admin-container">
+    <div class="admin-container-flex">
       <div class="admin-column">
         <button id="fetch-all-users-button" style="margin-bottom: 10px;">Load Users</button>
         <div class="table-container">
@@ -149,11 +179,15 @@
   
       </div>
 
-    <div class="admin-container">
+      <div class="admin-container-flex">
+        <h1>Current Issues</h1>
+      </div>
+
+    <div class="admin-container-flex">
       <div class="admin-column">
         <button id="fetch-all-issues-button" style="margin-bottom: 10px;">Load Issues</button>
         <div class="table-container">
-          <table id="issuesTable">
+          <table id="issuesTable" style="max-height: 700px;">
               <thead>
                   <tr>
                       <th>Email</th>
@@ -170,6 +204,10 @@
       
       </div>
 
+    </div>
+
+    <div class="admin-container-flex">
+      <h1>Alerts and Logs</h1>
     </div>
 
     <div class="admin-container">
@@ -189,9 +227,10 @@
 
       <div class="admin-column">
         <button id="get-site-log" style="margin-bottom: 10px;">Get sign in logs</button>
+        <button id="display-signed-in-users" style="margin-bottom: 10px;">Display all signed in users</button>
         <button id="download-signedin" style="margin-bottom: 10px;">Download all signed in users</button>
         <h2>Recent Sign-Ins</h2>
-            <div class="table-container">
+            <div class="table-container" style="max-height: 600px;">
             <table border="1">
               <thead>
                   <tr>
@@ -199,7 +238,7 @@
                       <th>Sign-In Log</th>
                   </tr>
               </thead>
-              <tbody id="signinLogsTableBody">
+              <tbody id="siteLogsTableBody">
                   <!-- Logs will be inserted here -->
               </tbody>
           </table>
@@ -208,10 +247,10 @@
     </div>
 
     
-    <div class="admin-container" style="height: auto;">
-      <div class="admin-column" style="height: auto;">
-      <button id="fetch-recent-logs" style="background-color: red; margin-top: 10px;">Get recent server logs</button>
-      <button id="download-logs" style="background-color: red; margin-top: 10px;">Download server logs</button>
+    <div class="admin-container-flex" >
+      <div class="admin-column">
+      <button id="fetch-recent-logs" style="background-color: red; margin-top: 10px; width: 100%">Get recent server logs</button>
+      <button id="download-logs" style="background-color: red; margin-top: 10px; width:100%">Download server logs</button>
       </div>
     </div>
 

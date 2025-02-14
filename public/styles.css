@@ -344,7 +344,7 @@ body {
   width: 80%;
   min-height: 70vh; /* Minimum height to ensure it takes at least full screen height */
   margin: 20px auto; /* Reduce margin to prevent it from going off-screen */
-  margin-top: 100px;
+  
   background: rgb(255, 255, 255);
   padding: 40px;
   border-radius: 15px;
@@ -406,6 +406,64 @@ body {
   gap: 20px; /* Constant margin between columns */
 }
 
+.admin-container-flex {
+  width: 80%;
+  min-height: fit-content; /* Changes from fixed height to fit content */
+  margin: 20px auto;
+  background: rgb(255, 255, 255);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+  
+}
+
+.admin-column-flex {
+  display: inline-flex; /* Use inline-flex to conform to the size of the content */
+  background: rgb(207, 206, 206);
+  padding: 20px;
+  border-radius: 10px;
+  flex-direction: column;
+  justify-content: flex-start; /* Align items to the top */
+  color: rgb(0, 0, 0);
+  flex-shrink: 0; /* Prevent columns from shrinking */
+  width: auto; /* Adjust width to fit content */
+}
+
+.sign-in-table-container {
+  width: 100%;
+  overflow-x: auto; /* Enables horizontal scrolling */
+  max-width: 100%;
+}
+
+.sign-in-table {
+  width: 100%;
+  border-collapse: collapse; /* Ensures no gaps between borders */
+  background: transparent;
+  color: white;
+}
+
+.sign-in-table th,
+.sign-in-table td {
+  border: 1px solid white; /* White separators */
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap; /* Prevents text wrapping */
+}
+
+.sign-in-table th {
+  font-weight: bold;
+  background: transparent; /* Transparent header */
+}
+
+.sign-in-table tr {
+  background: transparent !important; /* Ensures no alternating row colors */
+}
+
+
 .admin-column {
   flex: 1; /* Each column takes up equal space */
   display: flex;
@@ -426,12 +484,20 @@ body {
     height: auto; /* Adjust height to content */
     padding: 20px;
     margin: 20px; /* Add margin to the sides */
-    margin-top: 100px; /* Adjust margin to prevent overlap with navbar */
+    /*margin-top: 100px;  Adjust margin to prevent overlap with navbar */
     gap: 20px; /* Constant margin between columns */
     
   }
 
   .admin-container {
+    flex-direction: column; /* Stack the columns vertically */
+    height: auto; /* Adjust height to content */
+    padding: 20px;
+    gap: 20px; /* Constant margin between columns */
+    margin: 20px; /* Add margin to the sides */
+  }
+
+  .admin-container-flex{
     flex-direction: column; /* Stack the columns vertically */
     height: auto; /* Adjust height to content */
     padding: 20px;

@@ -349,9 +349,9 @@ app.patch("/user/updateUser", authenticateToken, async (req, res) => {
 
         if (field === "isSignedIn") {
             if (newValue) {
-                signInLogFile.write(`[${new Date().toISOString()}] ${user.name} (${user.organisation}) Signed in to the site \n` )
+                signInLogFile.write(`[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${user.name} (${user.organisation}) Signed in to the site \n` )
             } else {
-                signInLogFile.write(`[${new Date().toISOString()}] ${user.name} (${user.organisation}) Signed out of the site \n` )
+                signInLogFile.write(`[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${user.name} (${user.organisation}) Signed out of the site \n` )
             }
         }
 
@@ -402,9 +402,9 @@ app.patch("/admin/updateUser", authenticateAdminToken, async (req, res) => {
 
         if (field === "isSignedIn") {
             if (newValue) {
-                signInLogFile.write(`[${new Date().toISOString()}] ${user.name} (${user.organisation}) Signed in to the site \n` )
+                signInLogFile.write(`[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${user.name} (${user.organisation}) Signed in to the site \n` )
             } else {
-                signInLogFile.write(`[${new Date().toISOString()}] ${user.name} (${user.organisation}) Signed out of the site \n` )
+                signInLogFile.write(`[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${user.name} (${user.organisation}) Signed out of the site \n` )
             }
         }
 
@@ -788,6 +788,40 @@ app.get("/admin/downloadSignedInUsers", authenticateAdminToken, async (req, res)
     }
 });
 
+//Route to get admin userstats
+app.get("/admin/userStats", authenticateAdminToken, async (req, res) => {
+    try {
+        // Count total users
+        const totalUsers = await User.count();
+
+        // Count signed-in users
+        const signedInUsers = await User.count({ where: { isSignedIn: true } });
+
+        res.json({ signedInUsers, totalUsers });
+    } catch (error) {
+        console.error("Error fetching user stats:", error);
+        res.status(500).json({ message: "Error fetching user statistics" });
+    }
+});
+
+//Returns the details of all signed in users
+app.get("/admin/signedInUsers", authenticateAdminToken, async (req, res) => {
+    try {
+        // Fetch users who are signed in
+        const signedInUsers = await User.findAll({
+            attributes: ["name","organisation", "phoneNumber", "email"], // Select only required fields
+            where: { isSignedIn: true }
+        });
+
+        res.json(signedInUsers);
+    } catch (error) {
+        console.error("Error fetching signed-in users:", error);
+        res.status(500).json({ message: "Error retrieving signed-in users" });
+    }
+});
+
+
+
 
 
 
@@ -802,7 +836,7 @@ app.get('/', (req, res) => {
 
 // Override console.log to include timestamps and write to both the console and the file
 console.log = (message) => {
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString().replace('T', ' ').replace('Z', '');
     const logMessage = `[${timestamp}] ${message}`;
     
     // Write to the console
