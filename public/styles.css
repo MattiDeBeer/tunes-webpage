@@ -1,425 +1,431 @@
 /* NAVIGATION BAR */
 .navbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #333;
-  padding: 15px 20px;
-  color: white;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%; /* Ensure it spans full width */
-  max-width: 100vw; /* Prevents horizontal scrolling */
-  box-sizing: border-box; /* Includes padding in width calculation */
-  z-index: 1000;
+  justify-content: space-between; /* Space out items evenly */
+  align-items: center; /* Center items vertically */
+  background: #333; /* Dark background color */
+  padding: 15px 20px; /* Padding around the navbar */
+  color: white; /* White text color */
+  position: fixed; /* Fix the navbar at the top */
+  top: 0; /* Align to the top */
+  left: 0; /* Align to the left */
+  width: 100%; /* Full width */
+  max-width: 100vw; /* Prevent horizontal scrolling */
+  box-sizing: border-box; /* Include padding in width calculation */
+  z-index: 1000; /* Ensure it stays on top */
 }
 
 /* Ensure the logo stays properly aligned in navbar */
 .navbar {
   display: flex;
-  align-items: center;
+  align-items: center; /* Center items vertically */
 }
 
 .navbar .logo {
   margin-right: auto; /* Pushes nav links to the right */
-  border-radius: 10px;
+  border-radius: 10px; /* Rounded corners for the logo */
 }
 
 .nav-links {
-  list-style: none;
-  display: flex;
-  gap: 20px;
-  padding: 0;
-  margin: 0;
+  list-style: none; /* Remove default list styling */
+  display: flex; /* Display links in a row */
+  gap: 20px; /* Space between links */
+  padding: 0; /* Remove default padding */
+  margin: 0; /* Remove default margin */
 }
 
 .nav-links li {
-  display: inline;
+  display: inline; /* Display list items inline */
 }
 
 .nav-links a {
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-  transition: 0.3s;
+  color: white; /* White text color */
+  text-decoration: none; /* Remove underline */
+  font-size: 16px; /* Font size */
+  transition: 0.3s; /* Smooth transition for hover effect */
 }
 
 .nav-links a:hover {
-  color: #667eea;
+  color: #667eea; /* Change color on hover */
 }
 
 /* Mobile Menu Button */
 .menu-toggle {
   margin-left: auto; /* Aligns the button to the right */
   all: unset; /* Reset all inherited styles */
-  display: none;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
+  display: none; /* Hide by default */
+  background: none; /* No background */
+  border: none; /* No border */
+  color: white; /* White color */
+  font-size: 24px; /* Font size */
+  cursor: pointer; /* Pointer cursor */
   transition: transform 0.3s ease; /* Add transition for rotation */
 }
 
 .menu-toggle:hover {
   color: rgb(255, 255, 255); /* Ensures it remains white on hover */
-  background-color: #333;
+  background-color: #333; /* Dark background color */
 }
 
 /* Rotate the menu button when active */
 .menu-toggle.active {
-  transform: rotate(90deg);
+  transform: rotate(90deg); /* Rotate 90 degrees */
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav-links {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    top: 60px;
-    right: 0;
-    background: #333;
-    width: 100%;
-    text-align: center;
-    transition: max-height 0.5s ease; /* Add transition for dropdown */
+    display: none; /* Hide links by default */
+    flex-direction: column; /* Stack links vertically */
+    position: absolute; /* Position absolutely */
+    top: 60px; /* Below the navbar */
+    right: 0; /* Align to the right */
+    background: #333; /* Dark background color */
+    width: 100%; /* Full width */
+    text-align: center; /* Center text */
+    transition: max-height 0.5s ease; /* Smooth transition for dropdown */
     max-height: 0; /* Initially hidden */
     overflow: hidden; /* Hide overflow */
   }
 
   .nav-links.active {
-    display: flex;
-    margin-top: 10px;
+    display: flex; /* Display links */
+    margin-top: 10px; /* Margin at the top */
     max-height: 400px; /* Adjust as needed */
-    padding-bottom: 20px;
+    padding-bottom: 20px; /* Padding at the bottom */
   }
 
   .menu-toggle {
-    display: block;
+    display: block; /* Show menu button */
   }
 }
-  
-  input[type="checkbox"] {
-    appearance: none;
-    width: 80px; /* Doubled width */
-    height: 40px; /* Doubled height */
-    background: #ef0909;
-    border-radius: 20px; /* Adjusted for new size */
-    position: relative;
-    cursor: pointer;
-    transition: background 0.3s;
-    }
-  
-    input[type="checkbox"]::before {
-    content: "";
-    position: absolute;
-    width: 32px; /* Doubled width */
-    height: 32px; /* Doubled height */
-    background: rgb(234, 234, 234);
-    border-radius: 50%;
-    top: 1px; /* Adjusted for new size */
-    left: 4px; /* Adjusted for new size */
-    transform: translateY(2px); /* Center the circle vertically */
-    transition: transform 0.3s;
-    }
-  
-    input[type="checkbox"]:checked {
-    background: #4CAF50; /* Green when ON */
-    }
-  
-    input[type="checkbox"]:checked::before {
-    transform: translate(40px, 2px); /* Adjusted for new size and centered vertically */
-    }
 
-    
-  /* Adjust login container to be below navbar */
-  .login-container {
-    margin-top: 100px;
-  }
+/* Custom checkbox styling */
+input[type="checkbox"] {
+  appearance: none; /* Remove default styling */
+  width: 80px; /* Width of the checkbox */
+  height: 40px; /* Height of the checkbox */
+  background: #ef0909; /* Red background color */
+  border-radius: 20px; /* Rounded corners */
+  position: relative; /* Position relative for the circle */
+  cursor: pointer; /* Pointer cursor */
+  transition: background 0.3s; /* Smooth transition for background */
+}
 
-  /* Prevents the entire page from scrolling sideways */
-  body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden; /* Prevents horizontal scrolling */
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  /* Logo Styling */
+input[type="checkbox"]::before {
+  content: ""; /* Empty content */
+  position: absolute; /* Position absolutely */
+  width: 32px; /* Width of the circle */
+  height: 32px; /* Height of the circle */
+  background: rgb(234, 234, 234); /* Light background color */
+  border-radius: 50%; /* Rounded circle */
+  top: 1px; /* Position from the top */
+  left: 4px; /* Position from the left */
+  transform: translateY(2px); /* Center the circle vertically */
+  transition: transform 0.3s; /* Smooth transition for movement */
+}
+
+input[type="checkbox"]:checked {
+  background: #4CAF50; /* Green background when checked */
+}
+
+input[type="checkbox"]:checked::before {
+  transform: translate(40px, 2px); /* Move the circle to the right */
+}
+
+/* Adjust login container to be below navbar */
+.login-container {
+  margin-top: 100px; /* Margin at the top */
+}
+
+/* Prevents the entire page from scrolling sideways */
+body {
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  font-family: 'Poppins', sans-serif; /* Font family */
+}
+
+/* Logo Styling */
 .logo img {
-    height: 50px; /* Adjust the logo size */
-    width: auto; /* Maintain aspect ratio */
-    display: block; /* Remove extra spacing */
-  }
+  height: 50px; /* Height of the logo */
+  width: auto; /* Maintain aspect ratio */
+  display: block; /* Remove extra spacing */
+  border-radius: 10px; /* Rounded corners */
+}
 
 /* Global Styles */
 body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-  }
-  
-  /* Login Container */
+  font-family: 'Poppins', sans-serif; /* Font family */
+  background: linear-gradient(135deg, #667eea, #764ba2); /* Gradient background */
+  min-height: 100vh; /* Minimum height */
+  display: flex; /* Flexbox layout */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  margin: 0; /* Remove default margin */
+}
+
+/* Login Container */
+.login-container {
+  background: #ffffff; /* White background */
+  padding: 2rem; /* Padding */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Box shadow */
+  text-align: center; /* Center text */
+  width: 100%; /* Full width */
+  margin: 20px; /* Margin */
+  margin-top: 70px; /* Margin at the top */
+  max-width: 400px; /* Maximum width */
+}
+
+@media (max-width: 500px) {
   .login-container {
-    background: #ffffff;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 100%;
-    margin: 20px;
-    margin-top: 70px;
-    max-width: 400px;
-  
+    width: 90%; /* Adjust width */
+    padding: 1.5rem; /* Adjust padding */
   }
+}
 
-  @media (max-width: 500px) {
-    .login-container {
-      width: 90%;
-      padding: 1.5rem;
-    }
-  }
+/* Title */
+h2 {
+  margin-bottom: 1rem; /* Margin at the bottom */
+  color: #333; /* Text color */
+}
+
+/* Input Fields */
+input {
+  width: 95%; /* Full width */
+  padding: 10px; /* Padding */
+  margin: 10px 0; /* Margin */
+  border: 1px solid #ccc; /* Border */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  transition: all 0.3s ease; /* Smooth transition */
+}
   
-  /* Title */
-  h2 {
-    margin-bottom: 1rem;
-    color: #333;
-  }
-  
-  /* Input Fields */
-  input {
-    width: 95%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    transition: all 0.3s ease;
-  }
-  
+  /* Focus state for input fields */
   input:focus {
-    border-color: #667eea;
-    outline: none;
-    box-shadow: 0 0 8px rgba(102, 126, 234, 0.5);
+    border-color: #667eea; /* Blue border color */
+    outline: none; /* Remove default outline */
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.5); /* Blue shadow */
   }
-  
-  /* Button */
+
+  /* General button styling */
   button {
-    width: 100%;
-    padding: 10px;
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    width: 100%; /* Full width */
+    padding: 10px; /* Padding */
+    background: #667eea; /* Blue background */
+    color: white; /* White text */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    cursor: pointer; /* Pointer cursor */
+    transition: all 0.3s ease; /* Smooth transition */
   }
-  
+
+  /* Hover state for buttons */
   button:hover {
-    background: #5a67d8;
-    transform: scale(1.05);
+    background: #5a67d8; /* Darker blue background */
+    transform: scale(1.05); /* Slightly enlarge */
   }
 
-/* Style for Create Account Button */
-.create-account {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background-color: #4CAF50; /* Green color */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-.create-account:hover {
-    background-color: #45a049; /* Darker green */
+  /* Style for Create Account Button */
+  .create-account {
+    display: block; /* Block display */
+    width: 100%; /* Full width */
+    padding: 10px; /* Padding */
+    margin-top: 10px; /* Margin at the top */
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    cursor: pointer; /* Pointer cursor */
+    transition: background 0.3s ease; /* Smooth transition */
   }
 
-.sign-button{
-  margin-top: 10px;
-  margin-bottom: 10px;
+  /* Hover state for Create Account Button */
+  .create-account:hover {
+    background-color: #45a049; /* Darker green background */
+  }
 
-}
+  /* Margin adjustments for sign-in buttons */
+  .sign-button {
+    margin-top: 10px; /* Margin at the top */
+    margin-bottom: 10px; /* Margin at the bottom */
+  }
 
-.signup-container{
-  background: #ffffff;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 100%;
-  margin: 20px;
-  margin-top: 100px;
-  max-width: 400px;
+  /* Styling for signup container */
+  .signup-container {
+    background: #ffffff; /* White background */
+    padding: 2rem; /* Padding */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Box shadow */
+    text-align: center; /* Center text */
+    width: 100%; /* Full width */
+    margin: 20px; /* Margin */
+    margin-top: 100px; /* Margin at the top */
+    max-width: 400px; /* Maximum width */
+  }
 
-}
-  
   /* Initially hide the message */
-.message {
-    opacity: 0;
+  .message {
+    opacity: 0; /* Hidden */
     transform: translateY(10px); /* Slightly move down */
-    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-    font-weight: bold;
-    text-align: center;
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; /* Smooth transition */
+    font-weight: bold; /* Bold text */
+    text-align: center; /* Center text */
   }
-  
-  /* When visible, fade in */
+
+  /* Show error message */
   .message.show-error {
-    color: red;
-    opacity: 1;
-    transform: translateY(0);
+    color: red; /* Red text */
+    opacity: 1; /* Visible */
+    transform: translateY(0); /* Move to original position */
   }
 
-  /* When visible, fade in */
+  /* Show success message */
   .message.show-success {
-    color: rgb(10, 207, 79);
-    opacity: 1;
-    transform: translateY(0);
+    color: rgb(10, 207, 79); /* Green text */
+    opacity: 1; /* Visible */
+    transform: translateY(0); /* Move to original position */
   }
 
-  
-  /* Responsive Design */
+  /* Responsive Design for login container */
   @media (max-width: 500px) {
     .login-container {
-      width: 90%;
-      padding: 1.5rem;
+      width: 90%; /* Adjust width */
+      padding: 1.5rem; /* Adjust padding */
     }
   }
 
   /* Centered contact form */
-.contact-container {
-    width: 80%;
-    margin: 50px auto;
-    padding: 2rem;
-    margin-top: 150px;
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    text-align: center;
-}
+  .contact-container {
+    width: 80%; /* Width */
+    margin: 50px auto; /* Centered margin */
+    padding: 2rem; /* Padding */
+    margin-top: 150px; /* Margin at the top */
+    background: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Box shadow */
+    border-radius: 8px; /* Rounded corners */
+    text-align: center; /* Center text */
+  }
 
-.message-box {
-  width: 95%;
-  margin-bottom: 20px;
-  height: 300px;
-  resize: none; /* Prevents resizing by the user */
-}
+  /* Styling for message box */
+  .message-box {
+    width: 95%; /* Full width */
+    margin-bottom: 20px; /* Margin at the bottom */
+    height: 300px; /* Fixed height */
+    resize: none; /* Prevent resizing */
+  }
 
-.side-by-side {
-  width: calc(100% - 20px); /* Adjust width to account for padding */
-  padding: 0 10px; /* Add padding to both sides */
-  background: rgba(150, 150, 150, 0.5); /* Make background more transparent */
-  display: flex;
-  border-radius: 8px;
-  padding: 10px;
-  justify-content: space-between;
-  align-items: center; /* Center text vertically */
-  margin-bottom: 20px;
-  gap: 20px;
-  border: 1px solid black; /* Add black border */
-}
+  /* Side-by-side container styling */
+  .side-by-side {
+    width: calc(100% - 20px); /* Adjust width */
+    padding: 0 10px; /* Padding */
+    background: rgba(150, 150, 150, 0.5); /* Semi-transparent background */
+    display: flex; /* Flexbox layout */
+    border-radius: 8px; /* Rounded corners */
+    justify-content: space-between; /* Space between items */
+    align-items: center; /* Center items vertically */
+    margin-bottom: 20px; /* Margin at the bottom */
+    gap: 20px; /* Gap between items */
+    border: 1px solid black; /* Black border */
+  }
 
-.dashboard-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  min-height: 100vh; /* Ensures it takes at least full screen height */
-  padding-top: 80px; /* Adjusted padding to push the dashboard down */
-  margin: 0 auto; /* Centers it */
-  box-sizing: border-box; /* Ensures padding doesn't cause overflow */
-}
+  /* Dashboard wrapper styling */
+  .dashboard-wrapper {
+    display: flex; /* Flexbox layout */
+    flex-direction: column; /* Column layout */
+    align-items: center; /* Center items */
+    width: 100%; /* Full width */
+    min-height: 100vh; /* Minimum height */
+    padding-top: 80px; /* Padding at the top */
+    margin: 0 auto; /* Centered margin */
+    box-sizing: border-box; /* Include padding in width/height */
+  }
 
-.dashboard-container {
-  width: 80%;
-  min-height: 70vh; /* Minimum height to ensure it takes at least full screen height */
-  margin: 20px auto; /* Reduce margin to prevent it from going off-screen */
-  
-  background: rgb(255, 255, 255);
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-  display: flex; /* Enables Flexbox */
-  flex-direction: row; /* Align items in a row */
-  justify-content: space-between; /* Space between columns */
-  gap: 20px; /* Constant margin between columns */
-}
+  /* Dashboard container styling */
+  .dashboard-container {
+    width: 80%; /* Width */
+    min-height: 70vh; /* Minimum height */
+    margin: 20px auto; /* Centered margin */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 40px; /* Padding */
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3); /* Box shadow */
+    display: flex; /* Flexbox layout */
+    flex-direction: row; /* Row layout */
+    justify-content: space-between; /* Space between items */
+    gap: 20px; /* Gap between items */
+  }
 
-/* Individual column styling */
-.dashboard-column {
-  flex: 1; /* Each column takes up equal space */
-  display: flex;
-  background: rgb(207, 206, 206);
-  padding: 20px;
-  border-radius: 10px;
-  flex-direction: column;
-  justify-content: flex-start; /* Align items to the top */
-  color: rgb(0, 0, 0);
-  flex-shrink: 0; /* Prevent columns from shrinking */
-}
+  /* Individual column styling for dashboard */
+  .dashboard-column {
+    flex: 1; /* Equal space for each column */
+    display: flex; /* Flexbox layout */
+    background: rgb(207, 206, 206); /* Background color */
+    padding: 20px; /* Padding */
+    border-radius: 10px; /* Rounded corners */
+    flex-direction: column; /* Column layout */
+    justify-content: flex-start; /* Align items to the top */
+    color: rgb(0, 0, 0); /* Text color */
+    flex-shrink: 0; /* Prevent shrinking */
+  }
 
-/* Style user info */
-.user-info {
-  font-size: 18px;
-}
+  /* Style user info */
+  .user-info {
+    font-size: 18px; /* Font size */
+  }
 
-/* Style extra content area */
-.extra-content {
-  width: 100%;
-  background: rgb(255, 255, 255);
-  border: 1px solid black;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  flex-shrink: 0; /* Prevent columns from shrinking */
-}
+  /* Style extra content area */
+  .extra-content {
+    width: 100%; /* Full width */
+    background: rgb(255, 255, 255); /* White background */
+    border: 1px solid black; /* Black border */
+    padding: 20px; /* Padding */
+    border-radius: 10px; /* Rounded corners */
+    text-align: center; /* Center text */
+    flex-shrink: 0; /* Prevent shrinking */
+  }
 
-.extra-content img {
-  display: block;
-  margin: 0 auto; /* Center the image horizontally */
-  width: 100%; /* Make the image fill the width of the container */
-  height: auto; /* Maintain the aspect ratio */
-  object-fit: contain; /* Ensure the image fits within the container without distortion */
-}
+  /* Styling for images in extra content */
+  .extra-content img {
+    display: block; /* Block display */
+    margin: 0 auto; /* Center image */
+    width: 100%; /* Full width */
+    height: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* Fit within container */
+  }
 
-.admin-container {
-  width: 80%;
-  min-height: 85vh;
-  margin: 20px auto; /* Reduce margin to prevent it from going off-screen */
-  background: rgb(255, 255, 255);
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-  display: flex; /* Enables Flexbox */
-  flex-direction: row; /* Align items in a row */
-  justify-content: space-between; /* Space between columns */
-  gap: 20px; /* Constant margin between columns */
-}
+  /* Admin container styling */
+  .admin-container {
+    width: 80%; /* Width */
+    min-height: 85vh; /* Minimum height */
+    margin: 20px auto; /* Centered margin */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 40px; /* Padding */
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3); /* Box shadow */
+    display: flex; /* Flexbox layout */
+    flex-direction: row; /* Row layout */
+    justify-content: space-between; /* Space between items */
+    gap: 20px; /* Gap between items */
+  }
 
-.admin-container-flex {
-  width: 80%;
-  min-height: fit-content; /* Changes from fixed height to fit content */
-  margin: 20px auto;
-  background: rgb(255, 255, 255);
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 20px;
-  
-}
+  /* Admin container with flexible height */
+  .admin-container-flex {
+    width: 80%; /* Width */
+    min-height: fit-content; /* Fit content height */
+    margin: 20px auto; /* Centered margin */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 40px; /* Padding */
+    border-radius: 15px; /* Rounded corners */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3); /* Box shadow */
+    display: flex; /* Flexbox layout */
+    flex-direction: row; /* Row layout */
+    justify-content: space-between; /* Space between items */
+    gap: 20px; /* Gap between items */
+  }
 
 .admin-column-flex {
   display: inline-flex; /* Use inline-flex to conform to the size of the content */
@@ -530,184 +536,195 @@ body {
   cursor: pointer;
   transition: background 0.3s ease;
 }
-
+/* Modal for terms and conditions */
 .terms-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  max-height: 80vh;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 5%;
-  overflow-y: auto;
-  border-radius: 10px;
-  margin-top: 20px;
-  box-sizing: border-box;
+  display: none; /* Hidden by default */
+  position: fixed; /* Fixed position */
+  z-index: 1000; /* High z-index to overlay other elements */
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Center using transform */
+  width: 80%; /* 80% of the viewport width */
+  max-height: 80vh; /* Maximum height of 80% of the viewport height */
+  background: rgba(0, 0, 0, 0.9); /* Semi-transparent black background */
+  color: white; /* White text color */
+  padding: 5%; /* Padding inside the modal */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border-radius: 10px; /* Rounded corners */
+  margin-top: 20px; /* Margin at the top */
+  box-sizing: border-box; /* Include padding in width/height */
 }
 
+/* Keyframes for flashing blue animation */
 @keyframes flashBlue {
-  0% { background-color: #ffffff; }
-  50% { background-color: #87CEFA; } /* Light blue */
-  100% { background-color: #ffffff; }
+  0% { background-color: #ffffff; } /* Start with white */
+  50% { background-color: #87CEFA; } /* Flash to light blue */
+  100% { background-color: #ffffff; } /* End with white */
 }
 
+/* Class to apply flashing blue animation */
 .flash-input {
-  animation: flashBlue 2s ease-in-out;
+  animation: flashBlue 2s ease-in-out; /* 2 seconds animation */
 }
 
-
-/* Table container with scrolling */
+/* Container for table with scrolling */
 .table-container {
-  max-width: 100%;
-  max-height: 700px; /* Adjust height as needed */
-  overflow: auto; /* Enables scrolling */
+  max-width: 100%; /* Full width */
+  max-height: 700px; /* Maximum height */
+  overflow: auto; /* Enable scrolling */
   border: 1px solid #ddd; /* Subtle border */
   border-radius: 8px; /* Rounded edges */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
 }
 
-/* Table styling */
+/* General table styling */
 table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: Arial, sans-serif;
+  width: 100%; /* Full width */
+  border-collapse: collapse; /* No gaps between borders */
+  font-family: Arial, sans-serif; /* Font family */
 }
 
-/* Table headers */
+/* Styling for table headers */
 thead {
-  background-color: #3498db; /* Blue header */
-  color: white;
-  position: sticky;
-  top: 0;
+  background-color: #3498db; /* Blue header background */
+  color: white; /* White text color */
+  position: sticky; /* Sticky header */
+  top: 0; /* Stick to the top */
 }
 
-/* Table cells */
+/* Styling for table cells */
 th, td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
+  padding: 12px; /* Padding inside cells */
+  border-bottom: 1px solid #ddd; /* Bottom border */
+  text-align: left; /* Left-aligned text */
 }
 
-/* Alternate row coloring */
+/* Alternate row coloring for table body */
 tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #f9f9f9; /* Light grey background */
 }
 
-/* Hover effect */
+/* Hover effect for table rows */
 tbody tr:hover {
-  background-color: #f1f1f1;
+  background-color: #f1f1f1; /* Slightly darker grey on hover */
 }
 
-/* Responsive tweaks */
+/* Responsive tweaks for small screens */
 @media (max-width: 600px) {
   th, td {
-      padding: 8px;
-      font-size: 14px;
+    padding: 8px; /* Smaller padding */
+    font-size: 14px; /* Smaller font size */
   }
 }
 
-
+/* Hover state for logout button */
 .logout-button:hover {
-  background-color: #c0392b; /* Darker red */
+  background-color: #c0392b; /* Darker red background */
 }
 
+/* Styling for change detail button */
 .change-detail-button {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-top: 0; /* Pushes the button to the bottom */
-  background-color: #3498db; /* Blue color */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  display: block; /* Block display */
+  width: 100%; /* Full width */
+  padding: 10px; /* Padding */
+  margin-top: 0; /* No top margin */
+  background-color: #3498db; /* Blue background */
+  color: white; /* White text */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Pointer cursor */
+  transition: background 0.3s ease; /* Smooth background transition */
 }
 
+/* Hide button if it has no text */
 .change-detail-button:empty {
-  display: none; /* Hide button if it has no text */
+  display: none; /* Hidden */
 }
 
+/* Styling for delete user button */
 .delete-user-button {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-top: auto; /* Pushes the button to the bottom */
-  background-color: #e71a1a; /* Red color */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  display: block; /* Block display */
+  width: 100%; /* Full width */
+  padding: 10px; /* Padding */
+  margin-top: auto; /* Push to the bottom */
+  background-color: #e71a1a; /* Red background */
+  color: white; /* White text */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Pointer cursor */
+  transition: background 0.3s ease; /* Smooth background transition */
 }
 
+/* Hide button if it has no text */
 .delete-user-button:empty {
-  display: none; /* Hide button if it has no text */
+  display: none; /* Hidden */
 }
+
+/* Hover state for delete user button */
 .delete-user-button:hover {
-  background-color: #c0392b; /* Darker red */
+  background-color: #c0392b; /* Darker red background */
 }
 
+/* Styling for change password button */
 .change-password-button {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-top: 0; /* Adjust margin to position it above the delete user button */
-  margin-bottom: 10px;
-  background-color: #e71a1a; /* Red color */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  display: block; /* Block display */
+  width: 100%; /* Full width */
+  padding: 10px; /* Padding */
+  margin-top: 0; /* No top margin */
+  margin-bottom: 10px; /* Bottom margin */
+  background-color: #e71a1a; /* Red background */
+  color: white; /* White text */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Pointer cursor */
+  transition: background 0.3s ease; /* Smooth background transition */
 }
 
-
+/* Hide button if it has no text */
 .change-password-button:empty {
-  display: none; /* Hide button if it has no text */
+  display: none; /* Hidden */
 }
+
+/* Hover state for change password button */
 .change-password-button:hover {
-  background-color: #c0392b; /* Darker red */
+  background-color: #c0392b; /* Darker red background */
 }
 
+/* Styling for text fields */
 .text-field {
-  width: 100%; /* Adjust width to account for margin */
-  padding: 10px;
-  margin-top: 10px; /* Add margin to all sides */
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-  box-sizing: border-box; /* Ensure padding is included in width */
+  width: 100%; /* Full width */
+  padding: 10px; /* Padding */
+  margin-top: 10px; /* Top margin */
+  border: 1px solid #ccc; /* Grey border */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  box-sizing: border-box; /* Include padding in width */
 }
 
-
-/* Submit button */
+/* Submit button styling */
 #submitMessage {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s;
+  background-color: #4CAF50; /* Green background color */
+  color: white; /* White text color */
+  padding: 10px 15px; /* Padding inside the button */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: 0.3s; /* Smooth transition for hover effect */
 }
 
+/* Hover state for submit button */
 #submitMessage:hover {
-    background-color: #45a049;
+  background-color: #45a049; /* Darker green background on hover */
 }
 
-/* Message status */
+/* Message status styling */
 #messageStatus {
-    margin-top: 10px;
-    color: green;
-    font-weight: bold;
+  margin-top: 10px; /* Margin at the top */
+  color: green; /* Green text color */
+  font-weight: bold; /* Bold text */
 }
 
   

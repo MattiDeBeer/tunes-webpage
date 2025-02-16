@@ -1,16 +1,18 @@
 const apiUrl = window.location.origin;
 
+// Display a message with a specific type (success or error)
 function showMessage(message, type) {
     const errorMessage = document.getElementById("message");
     errorMessage.textContent = message; // Update text
     errorMessage.classList.add(`show-${type}`); // Add fade-in effect
   
-    // Remove message after 3 seconds (optional)
+    // Remove message after 3 seconds
     setTimeout(() => {
       errorMessage.classList.remove(`show-${type}`);
     }, 3000);
 }
 
+// Show user details on the page
 function showDetails() {
     if (!window.loadedUser) {
         console.log("No user loaded");
@@ -24,11 +26,12 @@ function showDetails() {
     document.getElementById("qr-result").style.display = "block";
 }
 
+// Hide user details from the page
 function hideDetails() {
     document.getElementById("qr-result").style.display = "none";
 }
 
-// Navbar code
+// Navbar toggle functionality
 document.addEventListener("DOMContentLoaded", () => {
     const menuToggle = document.querySelector(".menu-toggle");
     const navLinks = document.querySelector(".nav-links");
@@ -38,14 +41,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// QR Scanner code
+// QR Scanner functionality
 document.addEventListener("DOMContentLoaded", async function () {
 
+    // Fetch user details using UUID
     async function getUserDetails(UUID) {
         const token = localStorage.getItem("authToken");
 
         try {
-
             const response = await fetch(`${apiUrl}/admin/fetchUserDetailsUUID?uuid=${UUID}`, {
                 method: "GET",
                 headers: {
@@ -75,19 +78,17 @@ document.addEventListener("DOMContentLoaded", async function () {
             document.getElementById("sign-button").style.display = "block";
             document.getElementById("resume-button").style.display = "block";
             showDetails();
-            return true
+            return true;
             
         } catch(err) {
             console.error("Error fetching user details:", err);
-            showMessage("Error fetching user details: " + err, "error")
-            }
-        
+            showMessage("Error fetching user details: " + err, "error");
+            return false;
+        }
     }
 
-
-    async function onScanSuccess(decodedText, decodedResult, verbose) {
-        const token = localStorage.getItem("authToken");
-        
+    // Handle successful QR code scan
+    async function onScanSuccess(decodedText, decodedResult) {
         try {
             // Pause the scanner
             await qrScanner.stop();
@@ -95,15 +96,14 @@ document.addEventListener("DOMContentLoaded", async function () {
             console.error("Failed to stop the scanner:", err);
         }
 
-
-        if (getUserDetails(decodedText)) {
+        if (await getUserDetails(decodedText)) {
             showMessage("QR code scanned successfully", "success");
         } else {
-            showMessage("QR scan failed", "error")
+            showMessage("QR scan failed", "error");
         }
     }
-        
 
+    // Initialize QR scanner
     let qrScanner = new Html5Qrcode("qr-reader");
     qrScanner.start(
         { facingMode: "environment" },  // Use rear camera if available
@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         onScanSuccess
     );
 
+    // Resume button functionality
     document.getElementById("resume-button").addEventListener("click", async () => {
         try {
             await qrScanner.start(
@@ -127,6 +128,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
+    // Sign button functionality
     document.getElementById("sign-button").addEventListener("click", async function(event) {
         event.preventDefault(); // Prevent form refresh
     
@@ -134,33 +136,32 @@ document.addEventListener("DOMContentLoaded", async function () {
         const email = window.loadedUser.email;
         const field = "isSignedIn";
         const newValue1 = !window.loadedUser.isSignedIn;
-        const newValue2 = newValue1
+        const newValue2 = newValue1;
 
-        console.log('Updating user:', userEmail, field, newValue1, newValue2);
+        console.log('Updating user:', email, field, newValue1, newValue2);
 
         const response = await fetch(`${apiUrl}/admin/updateUser`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+                "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({email, field, newValue1, newValue2 })
+            body: JSON.stringify({ email, field, newValue1, newValue2 })
         });
 
-    
         const result = await response.json();
 
         if (response.ok) {
             showMessage(newValue1 ? "User signed in" : "User signed out", "success");
-            await getUserDetails(window.loadedUser.userId)
+            await getUserDetails(window.loadedUser.userId);
             showDetails();
-
         } else {
             showMessage("Error: " + result.message, "error");
         }        
     });
 });
 
+// Return to dashboard button functionality
 document.getElementById("return-to-dashboard").addEventListener("click", () => {
     window.location.href = "admin-dashboard.html";
 });
