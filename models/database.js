@@ -49,21 +49,79 @@ const Alert = sequelize.define("Alert", {
     }
 });
 
-// Define Issue model
 const Issue = sequelize.define("Issue", {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-    email: { 
-        type: DataTypes.STRING, 
-        allowNull: false, 
-        set(value) { this.setDataValue("email", value.toLowerCase()); } 
+    id: {
+        type: DataTypes.UUID,
+        primaryKey: true,
+        defaultValue: DataTypes.UUIDV4
     },
-    description: { type: DataTypes.STRING, allowNull: false },
-    status: { type: DataTypes.ENUM("open", "resolved"), defaultValue: "open" },
+    email: DataTypes.STRING,
+    description: DataTypes.TEXT,
+    status: {
+        type: DataTypes.STRING,
+        defaultValue: "open"
+    },
+    type: {
+        type: DataTypes.STRING,
+        defaultValue: "general"
+    },
+    userId: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    newValue: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
 }, { timestamps: true });
+
+
 
 // Sync database
 sequelize.sync({ force: false }).then(() => {  
     console.log("Database & tables synced!");
 });
 
-module.exports = { sequelize, User, Alert, Issue };
+const Festival = sequelize.define("Festival", {
+    name: { type: DataTypes.STRING, allowNull: false },
+    location: { type: DataTypes.STRING, allowNull: false },
+    startDate: { type: DataTypes.DATEONLY, allowNull: false },
+    endDate: { type: DataTypes.DATEONLY, allowNull: false },
+}, { timestamps: false });
+
+
+const UserFestival = sequelize.define("UserFestival", {
+    parkingType: {
+        type: DataTypes.ENUM("AAA", "Standard", "Staff", "VIP", "Trader", "Camping"),
+        allowNull: true,
+        defaultValue: "Standard",
+    }
+}, { timestamps: false });
+
+User.belongsToMany(Festival, { through: UserFestival });
+Festival.belongsToMany(User, { through: UserFestival });
+
+const festivalsToAdd = [
+    { name: 'Tunes on the bay', location: 'Swansea', startDate: '2025-02-05', endDate: '2025-04-05' },
+    { name: 'Bands on the sands', location: 'Perranporth', startDate: '2025-05-16', endDate: '2025-05-17' },
+    { name: 'Tunes in the Castle', location: 'Exeter', startDate: '2025-05-23', endDate: '2025-05-25' },
+    { name: 'Tunes in the Dunes', location: 'Perranporth', startDate: '2025-06-06', endDate: '2025-08-06' },
+    { name: 'Hootenanny Faye', location: 'Port Elliott Estate', startDate: '2025-06-19', endDate: '2025-06-22' },
+    { name: 'Wild Gardens', location: 'Port Elliott Estate', startDate: '2024-07-18', endDate: '2024-07-20' },
+    { name: 'Tunes at the Coliseum', location: 'Carlyon Bay', startDate: '2024-06-25', endDate: '2024-07-26' },
+    { name: 'Tunes in the Park', location: 'Port Elliott Estate', startDate: '2024-08-21', endDate: '2024-08-24' },
+    { name: 'Bands on the sands', location: 'Perranporth', startDate: '2024-09-05', endDate: '2024-09-06' },
+    { name: 'Pentunes', location: 'Pentewan', startDate: '2024-09-19', endDate: '2024-09-20' },
+];
+
+(async () => {
+    await sequelize.sync();
+
+    const count = await Festival.count();
+    if (count === 0) {
+        await Festival.bulkCreate(festivalsToAdd);
+        console.log("Added initial festival data.");
+    }
+})();
+
+module.exports = { sequelize, User, Alert, Issue, Festival, UserFestival };

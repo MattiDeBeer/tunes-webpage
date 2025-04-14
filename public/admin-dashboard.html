@@ -16,23 +16,6 @@
         <div id="terms-text">
         </div>
 
-        
-        <div id="table-div" style="display: none;" class="sign-in-table-container">
-          <table border="1" class="sign-in-table">
-              <thead>
-                  <tr>
-                      <th>Name</th>
-                      <th>Organisation</th>
-                      <th>Phone Number</th>
-                      <th>Email</th>
-                  </tr>
-              </thead>
-              <tbody id="signinLogsTableBody">
-                  <!-- Logs will be inserted here -->
-              </tbody>
-          </table>
-        </div>
-
         <div style="display: flex; flex-direction: column;">
         <button id="acceptBtn" style="margin-top: 10px; background-color: rgb(255, 0, 0);">Continue</button>
         <button id="declineBtn" style="margin-top: 10px; background-color: rgb(46, 156, 24);">Cancel</button>
@@ -56,13 +39,16 @@
 
 
   <!-- Parent Container -->
-  <div class="dashboard-wrapper">
+   
+   
+<div class="dashboard-wrapper">
 
-    <div class="admin-container-flex">
+
+
+  <div class="container-wrapper" style="height: auto; overflow: auto;">
       <h1>General</h1>
-    </div>
 
-    <div class="dashboard-container">
+      <div class="admin-container-flex" style="width: 100%; box-shadow: none; margin: 0; padding: 0;">
       <!-- User Info Column -->
       <div class="dashboard-column user-info">
         <h1>Welcome Admin, <span id="name">Loading...</span></h1>
@@ -72,7 +58,9 @@
         <p>There are currently <span id="signed-in-users" style="color: rgb(5, 155, 5);"">Loading ...</span> people on the festival site</p>
         <p>There are <span id="total-users">Loading ...</span> Regisered users</p>
         <div style="margin-top: auto">
-          <button id = "qr-redirect">QR scanner</button>
+          <h1>My Festivals</h1>
+          <div  id='festivalList'></div>
+            <button id="qr-redirect" style="margin-top: 10px;">QR scanner</button>
           <button id="logout", class = logout-button>Logout</button>
         </div>
       </div>
@@ -82,116 +70,21 @@
         <h2>QR code</h2>
       <img id="qrCodeImg" alt="Your QR Code" style="margin-top: 20px;">
       </div>
-
     </div>
+  </div>
 
-    <div class="admin-container-flex">
-      <h1>Edit user details</h1>
-    </div>
-
-    <!-- Empty Box Below Dashboard Container -->
-    <div class="admin-container">
-      <!-- User Data Box -->
-      <div class="admin-column">
-      <h2>Enter the email you which to edit</h2>
   
-  <form id="getUserForm">
-    <div class="form-group">
-      <label for="email">Email:</label>
-      <input type="email" class="text-field" id="getEmail" name="email" value="Enter an email address ..." required>
-    </div>
-    <button id ="get-user-details" type="submit", class="button">Get info</button>
-  </form>
-  <p id = "fetch-message", class="message"> </p>
-      </div>
-      
-
-      <div class="admin-column">
-        <h2 id = "userDetailsTitle">Specify a detail you which to edit</h2>
-        <p>Name:</p>
-        <button id="changeName" class="change-detail-button"></button>
-        <p>Email:</p>
-        <button id="changeEmail" class="change-detail-button"></button>
-        <p>Organisation:</p>
-        <button id="changeOrganisation" class="change-detail-button"></button>
-        <p>Phone Number:</p>
-        <button id="changePhoneNumber" class="change-detail-button"></button>
-      
-        <p id="nameLabel">Admin: </p>
-        <button id="changeAdmin" class="change-detail-button"></button>
-
-        <p id="emailLabel">Signed In </p>
-        <button id="changeSignedIn" class="change-detail-button"></button>
-
-        <p>Admin Settings</p>
-        <button id="changePassword" class="change-password-button"></button>
-        <button id ="deleteUser", class = "delete-user-button"></button>
-        
-
-      </div>  
-
-      <div class="admin-column">
-        <h2 id = "ChangeUserDetailsTitle">Enter new details</h2>
-        <!-- Normal submission form-->
-        <form id="changeDetailForm" style="display: none;" >
-          <div class="form-group">
-          <label for="changeDetailInput1"></label>
-          <input type="text" id="changeDetailInput1" class="text-field" name="changeDetail"  required>
-          <label for="changeDetailInput2"></label>
-          <input type="text" id="changeDetailInput2" class="text-field" name="changeDetail"  required>
-          </div>
-        <button type="submit", class="button">Change Detail</button>
-        </form>
-
-        <!--  Binary submission form -->
-        <form id="changeDetailFormBinary" style="display: none;" >
-          <div class = "side-by-side">
-            <label for="adminToggle" style="font-size: 1.5em;">Toggle:</label>
-            <input type="checkbox" id="toggle" checked>
-          </div>
-          <button type="submit">Update User</button>
-      </form>
-      <p id="change-user-message" class="message"> </p>
-    </div>
-    </div>
-
-    <div class="admin-container-flex">
-      <div class="admin-column">
-        <button id="fetch-all-users-button" style="margin-bottom: 10px;">Load Users</button>
-        <div class="table-container">
-          <table id="userTable">
-              <thead>
-                  <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Signed In</th>
-                      <th>Edit user</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <!-- User data will go here -->
-              </tbody>
-          </table>
-      </div>
-      
-      </div>
-  
-      </div>
-
-      <div class="admin-container-flex">
+    <div class="container-wrapper" style="height: auto; overflow: auto;">
         <h1>Current Issues</h1>
-      </div>
 
-    <div class="admin-container-flex">
       <div class="admin-column">
         <button id="fetch-all-issues-button" style="margin-bottom: 10px;">Load Issues</button>
-        <div class="table-container">
-          <table id="issuesTable" style="max-height: 700px;">
+        <div class="table-wrapper">
+          <table id="issuesTable" style="max-height: 700px;" class="clean-table">
               <thead>
                   <tr>
                       <th>Email</th>
-                      <th>Message</th>
+                      <th>Request Type</th>
                       <th>Created At</th>
                       <th>Resolve</th>
                   </tr>
@@ -200,28 +93,29 @@
                   <!-- Issues will be inserted here dynamically -->
               </tbody>
           </table>
-      </div>
-      
+        </div>
       </div>
 
-    </div>
 
-    <div class="admin-container-flex">
+  </div>
+  <div class="container-wrapper" style="height: auto; margin: 10;">
+    
       <h1>Alerts and Logs</h1>
-    </div>
 
-    <div class="admin-container">
+      <div class="admin-container-flex" style="width: 100%; box-shadow: none; margin: 0; padding: 0;">
 
       <div class="admin-column">
         
-        <div class="contact-container">
-          <h2>Write an alert</h2>
-          <input type="text" id="alertSeverity" placeholder=" 'info' 'warning' or 'critical' " autocomplete="email" required>
-          <textarea id="alertText" class = "message-box"  placeholder="No alert currently specified, write your alert here ..."></textarea>
+      
+          <h2>Current Alert</h2>
+          <p id="currentAlert">No alert currently specified</p>
+          <h2>Set Alert</h2>
+          <input type="text" id="alertSeverity" placeholder=" 'info' 'warning' or 'critical' " style="width: 96%;">
+          <textarea id="alertText" class = "message-box" style="height: 200px; width: 99%;" placeholder="Write your alert here ..."></textarea>
           <button id="submitAlert">Submit alert</button>
           <button id="deleteAlert" style="background-color: red; margin-top: 10px;">Remove Current alert</button>
           <p id="alert-message" class = "message"></p>
-      </div>
+      
 
       </div>
 
@@ -229,10 +123,10 @@
         <button id="get-site-log" style="margin-bottom: 10px;">Get sign in logs</button>
         <button id="display-signed-in-users" style="margin-bottom: 10px;">Display all signed in users</button>
         <button id="download-signedin" style="margin-bottom: 10px;">Download all signed in users</button>
-        <h2>Recent Sign-Ins</h2>
-            <div class="table-container" style="max-height: 600px;">
-            <table border="1">
-              <thead>
+        <h2>Results</h2>
+        <div class="table-wrapper">
+            <table class="clean-table" id="siteLogs</table>Table" >
+              <thead id ="siteLogsTableHead">
                   <tr>
                       <th>#</th>
                       <th>Sign-In Log</th>
@@ -245,18 +139,54 @@
         </div>
       </div>
     </div>
+  </div>
 
-    
-    <div class="admin-container-flex" >
+    <div class="container-wrapper" style="height: auto; margin: 0;">
+      <h1>Users</h1>
+
+      <div class="admin-container-flex" style="width: 100%; box-shadow: none; margin: 0; padding: 0;">
+        
+        <div class="admin-column">
+          <h1>Search users</h1>
+          <input type="text" id="searchInput" placeholder="Search users..." />
+        </div>
+
+        <div class="admin-column">
+          <h1>Search Results</h1>
+        <div class="table-wrapper">
+        <table class = "clean-table">
+          <thead>
+            <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Organisation</th>
+          <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="container-wrapper" style="height: auto; margin: 10">
+      <h1>Server Logs</h1>
+      <div class="admin-container-flex" style="width: 100%; box-shadow: none; margin: 0; padding: 0;">
       <div class="admin-column">
       <button id="fetch-recent-logs" style="background-color: red; margin-top: 10px; width: 100%">Get recent server logs</button>
       <button id="download-logs" style="background-color: red; margin-top: 10px; width:100%">Download server logs</button>
       </div>
     </div>
+    </div>
 
 
 
-  </div>
+</div>
 
   <script src="admin-dashboard.js"></script>
 </body>

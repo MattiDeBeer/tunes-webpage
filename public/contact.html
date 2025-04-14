@@ -23,12 +23,30 @@
 
     <div class="contact-container">
         <h2>Contact Us</h2>
-        <p>If you which to have your password reset, please provide the email address you used to make the account</p>
+        <p>If you have any questions or need assistance, please fill out the form below and we will get back to you as soon as possible.</p>
+        <p>If you are requesting a password reset, please make sure to tick the box above the submission button.
+          You must also include the email address you used to register with us, your phone number, full name and the name of your organisation.
+        </p>
+      
         <p>For any urgent requests, please email matti@tunesfestivals.com</p>
         <input type="text" id="email" placeholder="Enter your email" autocomplete="email" required>
         <textarea id="messageBox" class = "message-box"  placeholder="Type your message here..."></textarea>
+        <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 10px; padding: 10px;">
+          <label for="passwordReset" style="margin-right: 20px; font-size: 1.2em;">Is this request a password reset?</label>
+          <input type="checkbox" id="passwordReset" >
+      </div>
         <button id="submitMessage">Send Message</button>
-        <p id="message" class = "message"></p>
+        <p id="message" class="message"></p>
+        <style>
+          #passwordReset {
+                all: unset;
+                width: 20px;
+                height: 20px;
+                margin: 0;
+                padding: 0;
+                appearance: checkbox;
+          }
+        </style>
     </div>
     <script src="contact.js"></script>
 </body>

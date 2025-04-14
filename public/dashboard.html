@@ -12,7 +12,6 @@
   <!-- Fullscreen Modal for Terms and Conditions -->
   <div id="termsModal" class="terms-modal">
     <div style="z-index: 1001;">
-        <h2 style="color: white;">Important Information</h2>
         <div class="terms-box">
             <p id = "terms-text">
             </p>
@@ -25,7 +24,7 @@
     </div>
 </div>
 
-  <div class="dashboard-wrapper">
+<div class="dashboard-wrapper">
    <!-- Navigation Bar -->
    <nav class="navbar">
     <div class="logo">
@@ -39,87 +38,40 @@
     <button class="menu-toggle">&#9776;</button>
   </nav>
 
-  <div class="admin-container-flex">
+  <div class="container-wrapper" style="height: auto; overflow: auto;">
     <h1>General</h1>
-  </div>
 
-  <div class="dashboard-container">
-    <!-- User Info Column -->
-    <div class="dashboard-column user-info">
-      <h1>Welcome, <span id="name">Loading...</span></h1>
-      <p>Email: <span id="email">Loading...</span></p>
-      <p>Organisation: <span id="organisation">Loading...</span></p>
-      <button id="logout", class = logout-button>Logout</button>
-    </div>
-
+    <div class="admin-container-flex" style="width: 100%; box-shadow: none; margin: 0; padding: 0;">
     <!-- Additional Content Column -->
     <div class="dashboard-column extra-content">
       <h2>QR code</h2>
       <img id="qrCodeImg" alt="Your QR Code" style="margin-top: 20px;">
+      <div style="border: 1px solid grey; border-radius: 10px; padding: 10px; background-color: #f9f9f9;">
+        <p id="SignedInTxt"></p>
+      </div>
+    </div>
+    
+    <!-- User Info Column -->
+    <div class="dashboard-column user-info">
+      <h1>Welcome, <span id="name">Loading...</span></h1>
+      <p> This is the Tunes Festivals staff portal</p>
+      <p style="font-size: large; color: rgb(0, 0, 0);">
+        Please check all details below are correct, and you've requested to be added to the festivals you will be working.
+      </p>
+      <p style="margin-bottom: 5px;">Email: <span id="email">Loading...</span></p>
+      <p style="margin-bottom: 5px;">Organisation: <span id="organisation">Loading...</span></p>
+      <h1 style="margin-bottom: 5px;">My Festivals</h1>
+
+      <div  id='festivalList'></div>
+      <button id="requestJoinBtn" style="margin-top: 10px">Request to Join New Festival</button>
+      <button id="settings" style="margin-top: 10px">Settings</button>
+      <button id="logout", class = logout-button>Logout</button>
     </div>
   </div>
-
-  <div class="admin-container-flex">
-    <h1>Settings</h1>
   </div>
 
-  <div class="dashboard-container">
-    <!-- User Data Box -->
-   
-
-      <div class="admin-column">
-        <h2 id = "userDetailsTitle">Select a field to change</h2>
-        <p>Name:</p>
-        <button id="changeName" class="change-detail-button"></button>
-        <p>Email:</p>
-        <button id="changeEmail" class="change-detail-button"></button>
-        <p>Organisation:</p>
-        <button id="changeOrganisation" class="change-detail-button"></button>
-        <p>Phone Number:</p>
-        <button id="changePhoneNumber" class="change-detail-button"></button>
-      
-
-        <p>Signed In </p>
-        <button id="changeSignedIn" class="change-detail-button"></button>
-
-        <p>Admin Settings</p>
-        <button id="changePassword" class="change-password-button"></button>
-        <button id ="deleteUser", class = "delete-user-button"></button>
-        
-
-      </div>  
-
-      <div class="admin-column">
-        <!-- Normal submission form-->
-        <h2 id = "ChangeUserDetailsTitle">Please select detail to change</h2>
-
-        <form id="changeDetailForm" style="display: none;" >
-          <div class="form-group">
-          <label for="changeDetailInput1"></label>
-          <input type="text" id="changeDetailInput1" class="text-field" name="changeDetail"  required>
-          <label for="changeDetailInput2"></label>
-          <input type="text" id="changeDetailInput2" class="text-field" name="changeDetail"  required>
-          </div>
-        <button type="submit", class="button">Change Detail</button>
-        </form>
-
-        <!--  Binary submission form -->
-        <form id="changeDetailFormBinary" style="display: none;">
-          <div class = "side-by-side">
-            <label for="adminToggle" style="font-size: 1.5em;">Toggle:</label>
-            <input type="checkbox" id="toggle" checked>
-          </div>
-          <button type="submit">Update User</button>
-      </form>
-      <p id="message" class="message"></p>
-      </div>
-
-
-
-    
-  </div>
+  
 </div>
- 
   <script src="dashboard.js"></script>
 </body>
 </html>

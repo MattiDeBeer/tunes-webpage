@@ -14,17 +14,24 @@ function showMessage(message, type) {
 
 // Show user details on the page
 function showDetails() {
-    if (!window.loadedUser) {
-        console.log("No user loaded");
-        return;
+    if (!window.loadedUser || !Array.isArray(window.loadedUser.fields)) {
+      console.error("No loaded user or fields data available.");
+      return;
     }
-
-    document.getElementById("userName").textContent = "Name: " + window.loadedUser.name;
-    document.getElementById("userEmail").textContent = "Email: " + window.loadedUser.email;
-    document.getElementById("userOrganisation").textContent = "Organisation: " + window.loadedUser.organisation;
-    document.getElementById("userSignedIn").textContent = "Signed in: " + window.loadedUser.isSignedIn;
+  
+    const getField = (fieldName) => {
+      const field = window.loadedUser.fields.find(f => f.field === fieldName);
+      return field ? field.value : "N/A";
+    };
+  
+    document.getElementById("userName").textContent = "Name: " + getField("name");
+    document.getElementById("userEmail").textContent = "Email: " + getField("email");
+    document.getElementById("userOrganisation").textContent = "Organisation: " + getField("organisation");
+    document.getElementById("userSignedIn").textContent = "Signed in: " + (getField("isSignedIn") ? "Yes" : "No");
+  
     document.getElementById("qr-result").style.display = "block";
-}
+  }
+  
 
 // Hide user details from the page
 function hideDetails() {
@@ -41,51 +48,124 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+async function loadUserFestivalsTable() {
+    const userId = window.userId;
+    const tableBody = document.getElementById("festival-table-body");
+    console.log(tableBody);
+  
+    if (!userId || !tableBody) {
+      console.error("Missing user UUID or table body element.");
+      return;
+    }
+  
+    // Clear existing table rows
+    tableBody.innerHTML = "";
+  
+    try {
+      const response = await fetch(`/admin/users/festivals/${userId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+        }
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to fetch user festivals.");
+      }
+  
+      const affiliations = result.affiliations;
+  
+      if (!affiliations || affiliations.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 2;
+        cell.textContent = "No festival affiliations found.";
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+      }
+  
+      affiliations.forEach(festival => {
+        const row = document.createElement("tr");
+  
+        const nameCell = document.createElement("td");
+        nameCell.textContent = festival.festivalName;
+        row.appendChild(nameCell);
+  
+        const parkingCell = document.createElement("td");
+        parkingCell.textContent = festival.parkingType;
+        row.appendChild(parkingCell);
+  
+        tableBody.appendChild(row);
+      });
+    } catch (error) {
+      console.error("Error loading user festivals:", error);
+      showDismissAlert("Error loading user festival affiliations.");
+    }
+  }
+  
+
 // QR Scanner functionality
 document.addEventListener("DOMContentLoaded", async function () {
 
     // Fetch user details using UUID
     async function getUserDetails(UUID) {
         const token = localStorage.getItem("authToken");
-
+      
         try {
-            const response = await fetch(`${apiUrl}/admin/fetchUserDetailsUUID?uuid=${UUID}`, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                },
-            });
-    
-            const result = await response.json();
-    
-            if (response.status !== 200) {
-                showMessage("Failed to get details: " + result.message, "error");
-                document.getElementById("resume-button").style.display = "block";
-                return false;
+          const response = await fetch(`/admin/users/details/${UUID}`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`
             }
-    
-            console.log('Success:', result);
-    
-            if (result.isSignedIn) {
-                document.getElementById("sign-button").style.backgroundColor = "red";
-                document.getElementById("sign-button").textContent = "Sign user out";
-            } else {
-                document.getElementById("sign-button").style.backgroundColor = "green";
-                document.getElementById("sign-button").textContent = "Sign user in";
-            }
-            
-            window.loadedUser = result;
-            document.getElementById("sign-button").style.display = "block";
+          });
+      
+          const result = await response.json();
+      
+          if (!response.ok) {
+            showMessage("Failed to get details: " + (result.message || "Unknown error"), "error");
             document.getElementById("resume-button").style.display = "block";
-            showDetails();
-            return true;
-            
-        } catch(err) {
-            console.error("Error fetching user details:", err);
-            showMessage("Error fetching user details: " + err, "error");
             return false;
+          }
+      
+          // Extract sign-in status from result.fields
+          let isSignedIn = false;
+          if (Array.isArray(result.fields)) {
+            const signInField = result.fields.find(f => f.field === "isSignedIn");
+            if (signInField) {
+              isSignedIn = signInField.value === true;
+            }
+          }
+      
+          // Update sign-in button
+          const signButton = document.getElementById("sign-button");
+          signButton.style.display = "block";
+          signButton.style.backgroundColor = isSignedIn ? "red" : "green";
+          signButton.textContent = isSignedIn ? "Sign user out" : "Sign user in";
+      
+          // Show resume button
+          document.getElementById("resume-button").style.display = "block";
+      
+          // Store globally
+          window.loadedUser = result;
+          window.userId = UUID;
+      
+          // Show user info
+          await loadUserFestivalsTable();
+          showDetails();
+      
+          return true;
+      
+        } catch (err) {
+          console.error("Error fetching user details:", err);
+          showMessage("Error fetching user details: " + err.message, "error");
+          return false;
         }
-    }
+      }
+      
+      
 
     // Handle successful QR code scan
     async function onScanSuccess(decodedText, decodedResult) {
@@ -129,36 +209,47 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 
     // Sign button functionality
-    document.getElementById("sign-button").addEventListener("click", async function(event) {
-        event.preventDefault(); // Prevent form refresh
-    
-        const token = localStorage.getItem("authToken"); // Get the admin token
-        const email = window.loadedUser.email;
-        const field = "isSignedIn";
-        const newValue1 = !window.loadedUser.isSignedIn;
-        const newValue2 = newValue1;
+    document.getElementById("sign-button").addEventListener("click", async function (event) {
+        event.preventDefault();
+      
+        const token = localStorage.getItem("authToken");
+        const userId = window.userId;
 
-        console.log('Updating user:', email, field, newValue1, newValue2);
-
-        const response = await fetch(`${apiUrl}/admin/updateUser`, {
+        // Get current isSignedIn value from fields
+        const isSignedInField = window.loadedUser.fields.find(f => f.field === "isSignedIn");
+        const currentStatus = isSignedInField ? isSignedInField.value : false;
+        const newStatus = !currentStatus;
+      
+        try {
+          const response = await fetch("/admin/users/update", {
             method: "PATCH",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({ email, field, newValue1, newValue2 })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            showMessage(newValue1 ? "User signed in" : "User signed out", "success");
-            await getUserDetails(window.loadedUser.userId);
+            body: JSON.stringify({
+              userId: userId,
+              newDetails: {
+                isSignedIn: newStatus
+              }
+            })
+          });
+      
+          const result = await response.json();
+      
+          if (response.ok) {
+            showMessage(newStatus ? "User signed in." : "User signed out.", "success");
+            await getUserDetails(userId);
             showDetails();
-        } else {
+          } else {
             showMessage("Error: " + result.message, "error");
-        }        
-    });
+          }
+        } catch (error) {
+          console.error("Error toggling sign-in state:", error);
+          showMessage("An unexpected error occurred.", "error");
+        }
+      });
+      
 });
 
 // Return to dashboard button functionality
