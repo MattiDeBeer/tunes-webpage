@@ -10,12 +10,20 @@ const { v4: uuidv4 } = require('uuid');
 const { User } = require('../models/database'); // Import User model from database.js
 const { Issue } = require("../models/database"); // Import the Issue model
 const { Alert } = require("../models/database"); // Import the Alert model
+const { UserFestival } = require("../models/database"); // Import the UserFestivals model
+const { Festival } = require("../models/database"); // Import the Festivals model
 const { Parser } = require("json2csv");
+const nodemailer = require('nodemailer');
+const { Op } = require("sequelize");
+const { send } = require('process');
 
 require('dotenv').config(); // Load environment variables from .env file
 
 // Initialize the app
 const app = express();
+
+// Middleware to parse JSON bodies
+app.use(express.json());
 
 // Set Content Security Policy headers
 app.use((req, res, next) => {
@@ -42,8 +50,6 @@ const signInLogFile = fs.createWriteStream(path.join(logDirectory, 'siteLog.log'
 // Middleware to serve static files from the 'public' folder
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Middleware to parse JSON bodies
-app.use(express.json());
 
 // Function to check if an email is valid
 function isValidEmail(email) {
@@ -62,6 +68,69 @@ async function hashPassword(password) {
     const saltRounds = 10; // Number of salt rounds for bcrypt
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     return hashedPassword;
+}
+
+async function sendEmailVerbosing(to,subject,message) {
+    console.log(`Sending email to ${to} with subject "${subject}"`);
+    console.log(`Message: ${message}`);
+}
+
+async function getEmailFromUserId(userId) {
+    try {
+        const user = await User.findByPk(userId, { attributes: ["email"] });
+        if (!user) {
+            console.log(`User not found for ID: ${userId}`);
+            return null;
+        }
+        return user.email;
+    } catch (error) {
+        console.error(`Error fetching email for User ID ${userId}:`, error);
+        return null;
+    }
+}
+
+async function getFestivalNameFromId(festivalId) {
+    try {
+        const festival = await Festival.findByPk(festivalId, { attributes: ["name"] });
+        if (!festival) {
+            console.log(`Festival not found for ID: ${festivalId}`);
+            return null;
+        }
+        return festival.name;
+    } catch (error) {
+        console.error(`Error fetching festival name for ID ${festivalId}:`, error);
+        return null;
+    }
+}
+
+// Function to send an email to a user
+async function sendEmail(to, subject, message) {
+    try {
+        // Create a transporter using SMTP
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+            auth: {
+                user: process.env.SMTP_USER, // SMTP username
+                pass: process.env.SMTP_PASS  // SMTP password
+            }
+        });
+
+        // Email options
+        const mailOptions = {
+            from: process.env.SMTP_FROM, // Sender address
+            to: to,                      // Recipient address
+            subject: subject,            // Email subject
+            text: message                // Email body
+        };
+
+        // Send the email
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent successfully to ${to}`);
+    } catch (error) {
+        console.error(`Error sending email to ${to}:`, error);
+    }
 }
 
 // POST route for login
@@ -116,7 +185,6 @@ const authenticateToken = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         req.userId = decoded.userId; // Store userId in request object
-        console.log(`Authentication successful: User ID ${req.userId}`);
         next();
     } catch (err) {
         console.log('Authentication failed: Invalid token');
@@ -140,7 +208,6 @@ const authenticateAdminToken = async (req, res, next) => {
         // Check if the user is an admin
         const user = await User.findByPk(req.userId);
         if (user && user.isAdmin) {
-            console.log(`Admin authentication successful: User ID ${req.userId}`);
             next(); // Proceed if the user is an admin
         } else {
             console.log(`Admin authentication failed: User ID ${req.userId} does not have admin privileges`);
@@ -271,6 +338,20 @@ app.post("/signup", async (req, res) => {
 
         console.log(`Signup successful: User created with email - ${email}`);
         res.json({ message: "Account created successfully!" });
+        sendEmail(email, "Welcome to the Tunes staff app", `Hi ${name.split(' ')[0]},
+
+Welcome to the Festival Staff Portal — we're excited to have you on board! 
+
+To get started, please make sure your account is associated with the festival(s) you'll be working at. If your profile isn't yet linked, you can request to be added through the portal.
+Once you're affiliated with a festival, you can also request a parking upgrade if needed. Just visit the "My Festivals" section and select your preferred parking type.
+Please note that standard parking is sufficient for most staff, so only request an upgrade if you have special vehicle access requirements (such as a trader's van).
+
+If you have any questions or issues, feel free to reach out via the Contact Us page as this is monitored, so is the quickest way to do so.
+
+See you soon,
+
+The Festival Team`
+        );
     } catch (error) {
         console.error('General error creating user:');
         res.status(500).json({ message: "General error creating user" });
@@ -363,66 +444,6 @@ app.patch("/user/updateUser", authenticateToken, async (req, res) => {
     }
 });
 
-// Route to update a user's details as an admin
-app.patch("/admin/updateUser", authenticateAdminToken, async (req, res) => {
-    const { email, field, newValue1, newValue2 } = req.body;
-
-    // Check if all required fields are provided
-    if (email === undefined || field === undefined || newValue1 === undefined || newValue2 === undefined) {
-        console.log('Admin user update failed: Missing required fields');
-        return res.status(400).json({ message: "Email, field, and new values are required" });
-    }
-
-    // Check if the new values match
-    if (newValue1 !== newValue2) {
-        console.log(`Admin user update failed: New values do not match for email ${email}`);
-        return res.status(400).json({ message: "New values do not match" });
-    }
-
-    // Define valid fields that can be updated
-    const validFields = ["name", "email", "organisation", "phoneNumber", "password", "isSignedIn", "isAdmin"];
-
-    // Check if the field to be updated is valid
-    if (!validFields.includes(field)) {
-        console.log(`Admin user update failed: Invalid field ${field} for email ${email}`);
-        return res.status(400).json({ message: "Invalid field to update" });
-    }
-
-    try {
-        // Fetch user data from the database using the provided email
-        const user = await User.findOne({ where: { email } });
-
-        if (!user) {
-            console.log(`Admin user update failed: User not found for email ${email}`);
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        let newValue = newValue1;
-        // Hash the password if the field to be updated is the password
-        if (field === "password") {
-            newValue = await hashPassword(newValue1);
-        }
-
-        // Update the user field with the new value
-        user[field] = newValue;
-        await user.save();
-
-        // Log sign-in or sign-out events if the field updated is isSignedIn
-        if (field === "isSignedIn") {
-            if (newValue) {
-                signInLogFile.write(`[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${user.name} (${user.organisation}) Signed in to the site \n`);
-            } else {
-                signInLogFile.write(`[${new Date().toISOString().replace('T', ' ').replace('Z', '')}] ${user.name} (${user.organisation}) Signed out of the site \n`);
-            }
-        }
-
-        console.log(`Admin user update successful: Email ${email}, Field ${field}`);
-        res.json({ message: "User updated successfully", updatedUser: { email, [field]: newValue } });
-    } catch (error) {
-        console.error(`Error updating user with email ${email}:`, error);
-        res.status(500).json({ message: "Error updating user" });
-    }
-});
 
 // Route to delete user account (refactored to use Sequelize)
 app.delete("/user/delete", authenticateToken, async (req, res) => {
@@ -454,41 +475,6 @@ app.delete("/user/delete", authenticateToken, async (req, res) => {
     }
 });
 
-// Admin route to delete a user by email
-app.delete("/admin/deleteUser", authenticateAdminToken, async (req, res) => {
-    const { email } = req.body;
-
-    // Check if email is provided
-    if (!email) {
-        console.log('Admin user delete failed: Email is required');
-        return res.status(400).json({ message: "Email is required to delete a user" });
-    }
-
-    try {
-        // Fetch user data from the database using the provided email
-        const user = await User.findOne({ where: { email: email } });
-
-        if (!user) {
-            console.log(`Admin user delete failed: User not found for email ${email}`);
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Delete the user record from the database
-        await user.destroy();
-
-        // Delete the user's QR code file if it exists
-        const qrCodePath = path.join(__dirname, `../data/qr-codes/${user.userId}.png`);
-        if (fs.existsSync(qrCodePath)) {
-            fs.unlinkSync(qrCodePath);
-        }
-
-        console.log(`Admin user delete successful: Email ${email}`);
-        res.json({ message: "User account deleted successfully" });
-    } catch (error) {
-        console.error(`Error deleting user with email ${email}:`, error);
-        res.status(500).json({ message: "Error deleting user account" });
-    }
-});
 
 // Route to serve the Terms and Conditions (refactored)
 app.get('/terms', (req, res) => {
@@ -505,67 +491,59 @@ app.get('/terms', (req, res) => {
     });
 });
 
-// Admin route to fetch user details by UUID
-app.get("/admin/fetchUserDetailsUUID", authenticateAdminToken, async (req, res) => {
-    const { uuid } = req.query;
 
-    // Check if UUID is provided
-    if (!uuid) {
-        console.log('Fetch user details by UUID failed: UUID is required');
-        return res.status(400).json({ message: "UUID is required to fetch user details" });
-    }
-
-    try {
-        // Fetch user data from the database using the provided UUID
-        const user = await User.findOne({ where: { userId: uuid } });
-
-        if (!user) {
-            console.log(`Fetch user details by UUID failed: User not found for UUID ${uuid}`);
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Return user data, excluding the password
-        const { password, ...userData } = user.toJSON();
-        console.log(`Fetch user details by UUID successful: UUID ${uuid}`);
-        res.json(userData);
-    } catch (error) {
-        console.error(`Error fetching user details for UUID ${uuid}:`, error);
-        res.status(500).json({ message: "Error fetching user details" });
-    }
-});
-
-// Contact form submission endpoint (stores in Issues table)
 app.post("/contact", async (req, res) => {
-    const { email, message } = req.body;
-    
-    // Validate message and email
+    const { email, message, isPasswordReset } = req.body;
+
+    // Validate inputs
     if (!message || message.trim() === "") {
-        console.log('Contact form submission failed: Message cannot be empty');
+        console.log("Contact form submission failed: Message cannot be empty");
         return res.status(400).json({ message: "Message cannot be empty" });
     }
-    if (!email) {
-        console.log('Contact form submission failed: Email cannot be empty');
+
+    if (!email || email.trim() === "") {
+        console.log("Contact form submission failed: Email cannot be empty");
         return res.status(400).json({ message: "Email cannot be empty" });
     }
 
+    // Decide the issue type
+    const issueType = isPasswordReset ? "password_reset" : "general";
+
     try {
-        // Create a new issue in the database
         const newIssue = await Issue.create({
             id: uuidv4(),
             email: email,
             description: message,
             status: "open",
+            type: issueType,
+            userId: null,        // anonymous or not linked at this point
+            newValue: null,
             createdAt: new Date(),
-            updatedAt: new Date(),
+            updatedAt: new Date()
         });
 
-        console.log(`Contact form submission successful: Issue ID ${newIssue.id}`);
+        console.log(`Contact form submission (${issueType}) successful: Issue ID ${newIssue.id}`);
         res.status(200).json({ message: "Issue submitted successfully!", issueId: newIssue.id });
+        sendEmail(email, "Messege Recieved",`Hi, 
+
+This is a confirmation that we have recieved your messege.
+
+We will respond to this request as soon as we can.
+
+Best Whishes,
+
+The Tunes Festivals Team
+     
+-----
+
+Your Messege: 
+${message}`);
     } catch (error) {
-        console.error('Error saving issue:', error);
+        console.error("Error saving issue:", error);
         res.status(500).json({ message: "Error submitting issue" });
     }
 });
+
 
 // Route to add or update the alert
 app.post("/admin/addOrUpdateAlert", authenticateAdminToken, async (req, res) => {
@@ -657,59 +635,6 @@ app.get("/alert/get", authenticateToken, async (req, res) => {
     }
 });
 
-// Route to fetch all users
-app.get("/admin/browseUsers", authenticateAdminToken, async (req, res) => {
-    try {
-        // Fetch all users excluding their passwords
-        const users = await User.findAll({ attributes: { exclude: ["password"] } });
-        console.log('Users fetched successfully');
-        res.json(users);
-    } catch (error) {
-        console.error("Error fetching users:", error);
-        res.status(500).json({ message: "Error retrieving data" });
-    }
-});
-
-// Route to fetch open issues
-app.get("/issues/getOpen", authenticateAdminToken, async (req, res) => {
-    try {
-        // Fetch all issues with status 'open'
-        const issues = await Issue.findAll({
-            where: {
-                status: 'open'
-            }
-        });
-        console.log('Open issues fetched successfully');
-        res.json(issues);
-    } catch (error) {
-        console.error("Error fetching issues:", error);
-        res.status(500).json({ message: "Error fetching issues" });
-    }
-});
-
-// Route to resolve an issue
-app.patch("/issues/resolve/:id", authenticateAdminToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Find the issue by ID
-        const issue = await Issue.findByPk(id);
-        if (!issue) {
-            console.log(`Resolve Issue failed: Issue ID ${id} not found`);
-            return res.status(404).json({ message: "Issue not found" });
-        }
-
-        // Update the status to "resolved"
-        issue.status = "resolved";
-        await issue.save();
-
-        console.log(`Issue ID ${id} resolved successfully`);
-        res.json({ message: "Issue marked as resolved", issue });
-    } catch (error) {
-        console.error("Error resolving issue:", error);
-        res.status(500).json({ message: "Error resolving issue" });
-    }
-});
 
 // Route to get recent server logs
 app.get("/recentLogs", authenticateAdminToken, async (req, res) => {
@@ -862,6 +787,620 @@ app.get("/admin/signedInUsers", authenticateAdminToken, async (req, res) => {
     } catch (error) {
         console.error("Error fetching signed-in users:", error);
         res.status(500).json({ message: "Error retrieving signed-in users" });
+    }
+});
+
+
+// GET /festivals
+app.get("/festivals", authenticateToken, async (req, res) => {
+    try {
+        const festivals = await Festival.findAll();
+        res.json(festivals);
+    } catch (error) {
+        console.error("Error fetching festivals:", error);
+        res.status(500).json({ message: "Failed to fetch festivals." });
+    }
+});
+
+// POST /user/festivals/request
+app.post("/user/festivals/request", authenticateToken, async (req, res) => {
+    const { festivalId, note } = req.body;
+
+    try {
+        const user = await User.findByPk(req.userId);
+        const festival = await Festival.findByPk(festivalId);
+
+        if (!user || !festival) {
+            return res.status(404).json({ message: "User or festival not found." });
+        }
+
+        const message = `Request to join festival: ${festival.name} (${festival.location})\n\nNote: ${note || "No note provided."}`;
+
+        await Issue.create({
+            email: user.email,
+            description: message,
+            status: "open",
+            type: "join_request",
+            userId: user.userId,
+            newValue: String(festival.id) // storing the requested festival ID
+        });
+        
+
+        res.json({ message: "Your request has been submitted." });
+        sendEmail(user.email, "Request Recieved", `Hi ${user.name.split(' ')[0]},
+
+We have recieved your request to join ${festival.name}.
+
+We will respond to this as soon as we can.
+
+Once accepted, the festival will appear on your portal and you will recieve an email notifying you of the confirmation.
+
+Best Whishes,
+
+The Tunes Festivals Team
+
+----
+
+Your Note: 
+${note || "No note provided."}`);
+
+    } catch (err) {
+        console.error("Festival request error:", err);
+        res.status(500).json({ message: "Failed to submit festival request." });
+    }
+});
+
+app.post("/user/festivals/parking/request", authenticateToken, async (req, res) => {
+    const { festivalId, newParkingType, note } = req.body;
+  
+    if (!festivalId || !newParkingType) {
+        return res.status(400).json({ message: "festivalId and newParkingType are required." });
+    }
+
+    try {
+        const user = await User.findByPk(req.userId);
+        const festival = await Festival.findByPk(festivalId);
+
+        if (!user || !festival) {
+            return res.status(404).json({ message: "User or festival not found." });
+        }
+
+        const description = `User requested parking upgrade at "${festival.name}" to "${newParkingType}".\n\nNote: ${note || "No note provided."}`;
+
+        await Issue.create({
+            email: user.email,
+            description: description,
+            status: "open",
+            type: "parking_upgrade",
+            userId: user.userId,
+            newValue: JSON.stringify({ festivalId: festivalId, newValue: newParkingType })
+        });
+
+        res.json({ message: "Parking upgrade request submitted successfully." });
+        sendEmail(user.email, "Request Recieved", `Hi ${user.name.split(' ')[0]},
+
+We have recieved your request to upgrade your parking for ${festival.name} to '${newParkingType}'.
+
+We will respond to this as soon as we can.
+
+Once accepted, this will appear on your portal and you will recieve an email notifying you of the confirmation.
+
+Best Whishes,
+The Tunes Festivals Team
+
+----
+
+Your Note: 
+${note || "No note provided."}`);
+    } catch (err) {
+        console.error("Error submitting parking upgrade request:", err);
+        res.status(500).json({ message: "Server error while submitting request." });
+    }
+});
+
+
+
+// GET /user/festivals
+app.get("/user/festivals", authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId, {
+            include: {
+                model: Festival,
+                through: {
+                    attributes: ['parkingType']
+                }
+            }
+        });
+
+        if (!user) {
+            console.log(`User not found: ID ${req.userId}`);
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        console.log(`Fetched festivals for User ID ${req.userId}`);
+        res.json(user.Festivals); // Sequelize returns array of festivals + UserFestival.parkingType
+    } catch (err) {
+        console.error("Error fetching user's festivals:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
+app.get("/admin/issues", authenticateAdminToken, async (req, res) => {
+    try {
+        const issues = await Issue.findAll({
+            where: { status: "open" }, // Fetch only unresolved issues
+            order: [["createdAt", "DESC"]]
+        });
+
+        // Fetch all users once
+        const users = await User.findAll({ attributes: ["userId", "name", "email", "phoneNumber", "organisation"] });
+
+        // Map users by email for quick lookup
+        const userByEmail = Object.fromEntries(users.map(user => [user.email, user]));
+
+        // Attach matching user info to each issue (if any)
+        const issuesWithUser = issues.map(issue => {
+            const matchedUser = userByEmail[issue.email];
+            if (matchedUser) {
+            const { password, ...userDetails } = matchedUser.toJSON(); // Exclude password
+            return {
+                ...issue.toJSON(),
+                user: userDetails
+            };
+            }
+            return {
+            ...issue.toJSON(),
+            user: null
+            };
+        });
+
+        res.json(issuesWithUser);
+    } catch (err) {
+        console.error("Error fetching issues:", err);
+        res.status(500).json({ message: "Failed to fetch issues." });
+    }
+});
+
+app.patch("/admin/issues/resolve/:issueId", authenticateAdminToken, async (req, res) => {
+    const { issueId } = req.params;
+    const { action, note } = req.body; // action can be "accept" or "decline" or undefined
+  
+    try {
+      const issue = await Issue.findByPk(issueId);
+      if (!issue) return res.status(404).json({ message: "Issue not found." });
+  
+      if (action) {
+        // Append the resolution details (for parking or join requests)
+        issue.description += `\n\nResolved as ${action.toUpperCase()}. Note: ${note || "No additional note."}`;
+      } else {
+        // Standard resolution for general/password_reset issues
+        issue.description += "\n\nResolved.";
+      }
+  
+      issue.status = "resolved";
+      await issue.save();
+  
+    console.log(`Issue resolved successfully: Issue ID ${issueId}`);
+    res.json({ message: "Issue resolved successfully." });
+    if (action === 'decline') {
+        sendEmail(issue.email, "Request Declined", `Hi,
+
+Unfortunately your recent request was declined.
+
+Please feel free to resubmit the request with more details, or to reach out via the contact us page.
+
+Best,
+The Tunes Festivals Team
+
+-----
+
+The site admin left the note:
+${note || "No note provided."}`);
+    }
+
+    } catch (err) {
+      console.error("Error resolving issue:", err);
+      res.status(500).json({ message: "Error resolving issue." });
+    }
+  });
+  
+app.patch("/admin/userfestival/upgrade-parking", authenticateAdminToken, async (req, res) => {
+    const { userId, festivalId, newParkingType, note } = req.body;
+
+    console.log(newParkingType);
+
+    if (!userId || !festivalId || !newParkingType) {
+        return res.status(400).json({ message: "userId, festivalId, and newParkingType are required." });
+    }
+
+    try {
+        const userFestival = await UserFestival.findOne({
+            where: { UserUserId: userId, FestivalId: festivalId }
+        });
+
+        if (!userFestival) {
+            return res.status(404).json({ message: "User is not associated with this festival." });
+        }
+
+        // Update the parking type.
+        userFestival.parkingType = newParkingType;
+        await userFestival.save();
+
+        // Optionally, log or store the note if needed.
+        // For example: console.log(`Upgrade note: ${note}`);
+
+        res.json({ message: "Parking upgraded successfully.", parkingType: userFestival.parkingType });
+        const email = await getEmailFromUserId(userId)
+        const festivalName = await getFestivalNameFromId(festivalId)
+        if (email && festivalName) {
+            sendEmail(email, 'Parking Request Approved', 
+`Hi,
+
+Your request to upgrade your parking for ${festivalName} to ${newParkingType} was approved.
+
+Best whishes,
+The Tunes Festivals Team
+
+---
+
+Admin Note:
+ ${note || "No note provided."}`);
+        }
+    } catch (error) {
+        console.error("Error upgrading parking:", error);
+        res.status(500).json({ message: "Error upgrading parking." });
+    }
+});
+
+app.post("/admin/userfestival/join-festival", authenticateAdminToken, async (req, res) => {
+    const { userId, festivalIdStr, parkingType, note } = req.body;
+
+    const festivalId = parseInt(festivalIdStr, 10);
+        if (isNaN(festivalId)) {
+            return res.status(400).json({ message: "festivalId must be a valid number." });
+        }
+    
+    if (!userId || !festivalId) {
+        return res.status(400).json({ message: "userId and festivalId are required." });
+    }
+
+    console.log(`Join Festival Request received for User ID ${userId} to Festival ID ${festivalId}`);
+
+    try {
+        // Verify that the user exists
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Verify that the festival exists
+        const festival = await Festival.findByPk(festivalId);
+        if (!festival) {
+            return res.status(404).json({ message: "Festival not found." });
+        }
+
+        // Check if a join already exists to prevent duplicates.
+        const existingJoin = await UserFestival.findOne({
+            where: { UserUserId: userId, FestivalId: festivalId }
+        });
+        if (existingJoin) {
+            return res.status(400).json({ message: "User is already associated with this festival." });
+        }
+
+        // Create a new join association; default parking type is Standard.
+        const newJoin = await UserFestival.create({
+            UserUserId: userId,
+            FestivalId: festivalId,
+            parkingType: parkingType || "Standard"
+        });
+
+        // Optionally, log or process the note if needed.
+        // For example: console.log(`Join note: ${note}`);
+
+        res.json({ message: "User joined festival successfully.", join: newJoin });
+        console.log(`User ID ${userId} joined Festival ID ${festivalId} with parking type ${newJoin.parkingType}`);
+        const email = await getEmailFromUserId(userId)
+        const festivalName = await getFestivalNameFromId(festivalId)
+        if (email && festivalName) {
+            sendEmail(email, 'Festival Request Approved', `Hi,
+
+Your request to join ${festivalName} was approved.
+
+Best whishes,
+
+The Tunes Festivals Team
+
+---
+
+Admin Note:  
+${note || "No note provided."}`);
+        }
+    } catch (error) {
+        console.error("Error joining festival:", error);
+        res.status(500).json({ message: "Error joining festival." });
+    }
+});
+
+app.get("/admin/users/search", authenticateAdminToken, async (req, res) => {
+    const { query } = req.query; // the search string
+  
+    if (!query || query.trim() === "") {
+      return res.status(400).json({ message: "Search query cannot be empty." });
+    }
+  
+    try {
+      const users = await User.findAll({
+        where: {
+          [Op.or]: [
+            { name: { [Op.like]: `%${query}%` } },
+            { email: { [Op.like]: `%${query}%` } },
+            { organisation: { [Op.like]: `%${query}%` } }
+          ]
+        },
+        order: [["name", "ASC"]],
+        limit: 50
+      });
+  
+      res.json(users);
+    } catch (err) {
+      console.error("Error searching users:", err);
+      res.status(500).json({ message: "Error searching users." });
+    }
+  });
+
+app.get("/admin/users/details/:userId", authenticateAdminToken, async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const user = await User.findByPk(userId, {
+        attributes: { exclude: ["password"] }
+      });
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      const userData = user.toJSON();
+  
+      const fields = [
+        {
+          field: "name",
+          label: "Full Name",
+          type: "string",
+          value: userData.name || ""
+        },
+        {
+          field: "email",
+          label: "Email",
+          type: "email",
+          value: userData.email || ""
+        },
+        {
+          field: "phoneNumber",
+          label: "Phone Number",
+          type: "string",
+          value: userData.phoneNumber || ""
+        },
+        {
+          field: "organisation",
+          label: "Organisation",
+          type: "string",
+          value: userData.organisation || ""
+        },
+        {
+          field: "isAdmin",
+          label: "Admin Status",
+          type: "boolean",
+          allowedValues: [true, false],
+          value: userData.isAdmin
+        },
+        {
+          field: "isSignedIn",
+          label: "Currently Signed In",
+          type: "boolean",
+          allowedValues: [true, false],
+          value: userData.isSignedIn
+        }
+      ];
+  
+      res.json({ fields });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).json({ message: "Failed to retrieve user details." });
+    }
+  });
+
+  app.get("/admin/users/festivals/:userId", authenticateAdminToken, async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const user = await User.findByPk(userId, {
+        include: {
+          model: Festival,
+          attributes: ["id", "name", "location"],
+          through: {
+            attributes: ["parkingType"]
+          }
+        }
+      });
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      const parkingOptions = ["AAA", "Standard", "Staff", "VIP", "Trader", "Camping"];
+  
+      const affiliations = user.Festivals.map(festival => ({
+        festivalId: festival.id,
+        festivalName: festival.name,
+        location: festival.location,
+        parkingType: festival.UserFestival.parkingType,
+        allowedValues: parkingOptions
+      }));
+  
+      res.json({ affiliations });
+    } catch (error) {
+      console.error("Error retrieving user festival affiliations:", error);
+      res.status(500).json({ message: "Failed to retrieve affiliations." });
+    }
+  });
+
+app.patch("/admin/users/update", authenticateAdminToken, async (req, res) => {
+    const { userId, newDetails } = req.body;
+
+  
+    if (!userId || typeof newDetails !== "object" || Object.keys(newDetails).length === 0) {
+      return res.status(400).json({ message: "userId and at least one newDetail are required." });
+    }
+  
+    try {
+      const user = await User.findByPk(userId);
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      // Only update fields that exist on the model
+      const updatableFields = ["name", "email", "phoneNumber", "organisation", "isAdmin", "isSignedIn"];
+      const updatePayload = {};
+  
+      for (const key in newDetails) {
+        if (updatableFields.includes(key)) {
+          updatePayload[key] = newDetails[key];
+        }
+      }
+  
+      if (Object.keys(updatePayload).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update." });
+      }
+  
+      await user.update(updatePayload);
+  
+      res.json({
+        message: "User updated successfully.",
+        updatedFields: updatePayload
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Error updating user." });
+    }
+  });
+
+  app.get("/admin/users/id", authenticateAdminToken, async (req, res) => {
+    const { email } = req.query;
+  
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ message: "Valid email is required." });
+    }
+  
+    try {
+      const user = await User.findOne({ where: { email } });
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      res.json({ userId: user.userId });
+    } catch (err) {
+      console.error("Error fetching user by email:", err);
+      res.status(500).json({ message: "Error retrieving user ID." });
+    }
+  });
+  
+app.patch("/admin/users/change-password", authenticateAdminToken, async (req, res) => {
+    const { userId, password } = req.body;
+  
+    if (!userId || !password) {
+      return res.status(400).json({ message: "User ID and new password are required." });
+    }
+  
+    try {
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      const hashed = await hashPassword(password); // Use hasher
+      user.password = hashed;
+      await user.save();
+  
+      res.json({ message: "Password updated successfully." });
+      console.log(`Password changed successfully for User ID ${userId}`);
+      
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Server error changing password." });
+    }
+  });
+  
+
+app.delete("/admin/users/delete/:userId", authenticateAdminToken, async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const user = await User.findByPk(userId);
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      await user.destroy(); // or use soft delete if you prefer
+  
+      res.json({ message: "User deleted successfully." });
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      res.status(500).json({ message: "Server error deleting user." });
+    }
+  });
+
+app.delete("/admin/userfestival/remove", authenticateAdminToken, async (req, res) => {
+    const { userId, festivalId } = req.body;
+  
+    if (!userId || !festivalId) {
+      return res.status(400).json({ message: "userId and festivalId are required." });
+    }
+  
+    try {
+    const entry = await UserFestival.findOne({
+      where: {
+        UserUserId: userId,
+        FestivalId: festivalId
+      }
+    });
+  
+      if (!entry) {
+        return res.status(404).json({ message: "User is not associated with this festival." });
+      }
+  
+      await entry.destroy();
+  
+      res.json({ message: "User removed from festival successfully." });
+    } catch (err) {
+      console.error("Error removing festival affiliation:", err);
+      res.status(500).json({ message: "Failed to remove user from festival." });
+    }
+  });
+  
+// Admin route to send an email to a user
+app.post("/admin/sendEmail", authenticateAdminToken, async (req, res) => {
+    const { email, subject, message } = req.body;
+
+    // Validate inputs
+    if (!email || !subject || !message) {
+        console.log("Send email failed: Missing required fields");
+        return res.status(400).json({ message: "Email, subject, and message are required." });
+    }
+
+    try {
+        // Use the sendEmail function to send the email
+        await sendEmail(email, subject, message);
+
+        console.log(`Email sent successfully to ${email}`);
+        res.json({ message: "Email sent successfully." });
+    } catch (error) {
+        console.error("Error sending email:", error);
+        res.status(500).json({ message: "Error sending email." });
     }
 });
 
