@@ -32,7 +32,7 @@ async function loadUserFestivals(containerId) {
       // Table header
       const thead = document.createElement("thead");
       const headerRow = document.createElement("tr");
-      ["Festival Name", "Current Parking", "Request Change"].forEach(text => {
+      ["Festival Name", "Site Induction","Current Parking", "Request Change"].forEach(text => {
         const th = document.createElement("th");
         th.textContent = text;
         headerRow.appendChild(th);
@@ -47,7 +47,19 @@ async function loadUserFestivals(containerId) {
   
         const nameCell = document.createElement("td");
         nameCell.textContent = festival.name;
-  
+
+        const inductionCell = document.createElement("td");
+        if (festival.inductionLink) {
+          const link = document.createElement("a");
+          link.href = festival.inductionLink;
+          link.textContent = "Click Here";
+          link.target = "_blank"; // opens in a new tab
+          link.rel = "noopener noreferrer";
+          inductionCell.appendChild(link);
+        } else {
+          inductionCell.textContent = "Not available";
+        }
+        
         const parkingCell = document.createElement("td");
         const currentType = festival.UserFestival?.parkingType || "Standard";
         parkingCell.textContent = currentType;
@@ -158,6 +170,7 @@ async function loadUserFestivals(containerId) {
         actionCell.appendChild(actionWrapper);
   
         row.appendChild(nameCell);
+        row.append(inductionCell);
         row.appendChild(parkingCell);
         row.appendChild(actionCell);
   

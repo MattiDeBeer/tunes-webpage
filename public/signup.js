@@ -12,7 +12,7 @@ function showMessage(message, isSuccess) {
 
 // Fetch the Terms and Conditions from the server
 async function fetchTerms() {
-  const response = await fetch(`${apiUrl}/terms`);
+  const response = await fetch(`/terms`);
   const result = await response.json();
   return result.terms;
 }
@@ -21,7 +21,7 @@ async function fetchTerms() {
 async function showTerms() {
   terms = await fetchTerms();
 
-  document.getElementById("terms-text").textContent = terms;
+  document.getElementById("terms-box").innerHTML = terms;
   document.getElementById("termsModal").style.display = "Block";
   
   return new Promise((resolve) => {

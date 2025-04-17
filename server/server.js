@@ -340,17 +340,21 @@ app.post("/signup", async (req, res) => {
         res.json({ message: "Account created successfully!" });
         sendEmail(email, "Welcome to the Tunes staff app", `Hi ${name.split(' ')[0]},
 
-Welcome to the Festival Staff Portal — we're excited to have you on board! 
+Welcome to the Festival Staff Portal — we're excited to have you on board!
 
-To get started, please make sure your account is associated with the festival(s) you'll be working at. If your profile isn't yet linked, you can request to be added through the portal.
-Once you're affiliated with a festival, you can also request a parking upgrade if needed. Just visit the "My Festivals" section and select your preferred parking type.
-Please note that standard parking is sufficient for most staff, so only request an upgrade if you have special vehicle access requirements (such as a trader's van).
+To get started, please make sure your account is associated with the festival(s) you'll be working at.
+If your profile isn't yet linked, you can request to be added through the portal.
 
-If you have any questions or issues, feel free to reach out via the Contact Us page as this is monitored, so is the quickest way to do so.
+Once you're affiliated with a festival, you can also request a parking upgrade if needed.
+Just visit the "My Festivals" section and select your preferred parking type.
+Please note that standard parking is sufficient for most staff, so only request an upgrade if you have special vehicle access requirements (such as a trader’s van).
+
+If you have any questions or issues, feel free to reach out via the Contact Us page.
+This page is monitored regularly, so it's the quickest way to get support.
 
 See you soon,
 
-The Festival Team`
+The Tunes Festival Team`
         );
     } catch (error) {
         console.error('General error creating user:');
@@ -526,12 +530,11 @@ app.post("/contact", async (req, res) => {
         res.status(200).json({ message: "Issue submitted successfully!", issueId: newIssue.id });
         sendEmail(email, "Messege Recieved",`Hi, 
 
-This is a confirmation that we have recieved your messege.
+This is a confirmation that we have received your message.
 
 We will respond to this request as soon as we can.
 
-Best Whishes,
-
+Best wishes,
 The Tunes Festivals Team
      
 -----
@@ -829,13 +832,13 @@ app.post("/user/festivals/request", authenticateToken, async (req, res) => {
         res.json({ message: "Your request has been submitted." });
         sendEmail(user.email, "Request Recieved", `Hi ${user.name.split(' ')[0]},
 
-We have recieved your request to join ${festival.name}.
+We have received your request to join ${festival.name}.
 
 We will respond to this as soon as we can.
 
-Once accepted, the festival will appear on your portal and you will recieve an email notifying you of the confirmation.
+Once accepted, the festival will appear on your portal, and you will receive an email notifying you of the confirmation.
 
-Best Whishes,
+Best wishes,
 
 The Tunes Festivals Team
 
@@ -879,13 +882,13 @@ app.post("/user/festivals/parking/request", authenticateToken, async (req, res) 
         res.json({ message: "Parking upgrade request submitted successfully." });
         sendEmail(user.email, "Request Recieved", `Hi ${user.name.split(' ')[0]},
 
-We have recieved your request to upgrade your parking for ${festival.name} to '${newParkingType}'.
+We have received your request to upgrade your parking for ${festival.name} to '${newParkingType}'.
 
 We will respond to this as soon as we can.
 
-Once accepted, this will appear on your portal and you will recieve an email notifying you of the confirmation.
+Once accepted, this will appear on your portal, and you will receive an email notifying you of the confirmation.
 
-Best Whishes,
+Best wishes,
 The Tunes Festivals Team
 
 ----
@@ -986,11 +989,11 @@ app.patch("/admin/issues/resolve/:issueId", authenticateAdminToken, async (req, 
     if (action === 'decline') {
         sendEmail(issue.email, "Request Declined", `Hi,
 
-Unfortunately your recent request was declined.
+Unfortunately, your recent request was declined.
 
-Please feel free to resubmit the request with more details, or to reach out via the contact us page.
+Please feel free to resubmit the request with more details, or reach out via the Contact Us page.
 
-Best,
+Best wishes,
 The Tunes Festivals Team
 
 -----
@@ -1085,7 +1088,8 @@ app.post("/admin/userfestival/join-festival", authenticateAdminToken, async (req
             where: { UserUserId: userId, FestivalId: festivalId }
         });
         if (existingJoin) {
-            return res.status(400).json({ message: "User is already associated with this festival." });
+            console.log(`User ID ${userId} already associated with Festival ID ${festivalId}`);
+            return res.status(200).json({ message: "User is already associated with this festival." });
         }
 
         // Create a new join association; default parking type is Standard.
@@ -1107,8 +1111,7 @@ app.post("/admin/userfestival/join-festival", authenticateAdminToken, async (req
 
 Your request to join ${festivalName} was approved.
 
-Best whishes,
-
+Best wishes,
 The Tunes Festivals Team
 
 ---
@@ -1403,6 +1406,33 @@ app.post("/admin/sendEmail", authenticateAdminToken, async (req, res) => {
         res.status(500).json({ message: "Error sending email." });
     }
 });
+
+// PATCH /admin/festivals/:festivalId
+app.patch("/admin/festivals/:festivalId", authenticateAdminToken, async (req, res) => {
+    const { festivalId } = req.params;
+    const { name, location, startDate, endDate, inductionLink } = req.body;
+  
+    try {
+      const festival = await Festival.findByPk(festivalId);
+      if (!festival) {
+        return res.status(404).json({ message: "Festival not found" });
+      }
+  
+      await festival.update({
+        name,
+        location,
+        startDate,
+        endDate,
+        inductionLink
+      });
+  
+      res.json({ message: "Festival updated successfully", festival });
+    } catch (err) {
+      console.error("Error updating festival:", err);
+      res.status(500).json({ message: "Failed to update festival" });
+    }
+  });
+  
 
 // Route to serve index.html at the root of your site
 app.get('/', (req, res) => {

@@ -363,6 +363,150 @@ async function resetPassword(issue) {
     }       
 }
 
+async function showFestivalAdminModal() {
+  const existing = document.getElementById("festivalAdminModal");
+  if (existing) existing.remove();
+
+  const token = localStorage.getItem("authToken");
+
+  let festivals = [];
+  try {
+    const res = await fetch("/festivals", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    festivals = await res.json();
+  } catch (err) {
+    showDismissAlert("Failed to load festivals.");
+    return;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = "festivalAdminModal";
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.backgroundColor = "rgba(0,0,0,0.5)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "5000";
+
+  const modal = document.createElement("div");
+  modal.style.backgroundColor = "#fff";
+  modal.style.padding = "2rem";
+  modal.style.borderRadius = "10px";
+  modal.style.maxWidth = "900px";
+  modal.style.width = "90%";
+  modal.style.maxHeight = "90vh";
+  modal.style.overflowY = "auto";
+  modal.style.boxShadow = "0 0 15px rgba(0,0,0,0.2)";
+
+  const title = document.createElement("h3");
+  title.textContent = "Edit Festival Details";
+  modal.appendChild(title);
+
+  const table = document.createElement("table");
+  table.className = "clean-table";
+  const thead = document.createElement("thead");
+  thead.innerHTML = `
+    <tr>
+      <th>Name</th>
+      <th>Location</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Induction Link</th>
+      <th>Actions</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+
+  festivals.forEach(festival => {
+    const row = document.createElement("tr");
+
+    const nameInput = document.createElement("input");
+    nameInput.value = festival.name;
+
+    const locationInput = document.createElement("input");
+    locationInput.value = festival.location;
+
+    const startInput = document.createElement("input");
+    startInput.type = "date";
+    startInput.value = festival.startDate;
+
+    const endInput = document.createElement("input");
+    endInput.type = "date";
+    endInput.value = festival.endDate;
+
+    const linkInput = document.createElement("input");
+    linkInput.value = festival.inductionLink || "";
+
+    [nameInput, locationInput, startInput, endInput, linkInput].forEach(input => {
+      input.style.width = "100%";
+      input.style.padding = "0.25rem";
+    });
+
+    const cells = [
+      nameInput, locationInput, startInput, endInput, linkInput
+    ].map(input => {
+      const td = document.createElement("td");
+      td.appendChild(input);
+      return td;
+    });
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Save";
+    saveBtn.onclick = async () => {
+      try {
+        const response = await fetch(`/admin/festivals/${festival.id}`, {
+          method: "PATCH",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: nameInput.value,
+            location: locationInput.value,
+            startDate: startInput.value,
+            endDate: endInput.value,
+            inductionLink: linkInput.value || null
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.message || "Update failed");
+        showDismissAlert(`Updated ${nameInput.value} successfully`);
+      } catch (err) {
+        console.error("Update failed:", err);
+        showDismissAlert("Failed to update festival.");
+      }
+    };
+
+    const actionTd = document.createElement("td");
+    actionTd.appendChild(saveBtn);
+
+    const rowEl = document.createElement("tr");
+    [...cells, actionTd].forEach(cell => rowEl.appendChild(cell));
+    tbody.appendChild(rowEl);
+  });
+
+  table.appendChild(tbody);
+  modal.appendChild(table);
+
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "Close";
+  closeBtn.style.marginTop = "1rem";
+  closeBtn.onclick = () => document.body.removeChild(overlay);
+
+  modal.appendChild(closeBtn);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
 async function respond(issue) {
     // Close any existing modals
     const existing = document.getElementById("editDetailModal");
@@ -449,6 +593,7 @@ async function respond(issue) {
         showDismissAlert("Response sent and issue resolved.");
         document.body.removeChild(overlay);
         await resolveIssue(issue.id);
+        fetchIssues();
   
       } catch (err) {
         console.error("Error sending response:", err);
@@ -715,7 +860,7 @@ async function resolveIssue(issueId) {
   
     // Textarea
     const textarea = document.createElement("textarea");
-    textarea.placeholder = "Enter a message for the user (optional)...";
+    textarea.placeholder = "Leave an optional message for the user...";
     textarea.rows = 4;
     textarea.style.width = "95%";
     textarea.style.padding = "0.5rem";
@@ -766,9 +911,8 @@ async function resolveIssue(issueId) {
     document.body.appendChild(overlay);
   }
   
-  
 
-  async function implementAction(issue) {
+  async function implementAction(issue, note) {
     // Retrieve the user UUID from the attached user object.;
     const userId = issue.user ? issue.user.userId : null;
     if (!userId) {
@@ -793,7 +937,7 @@ async function resolveIssue(issueId) {
             festivalIdStr: festivalId,
             // Optionally set a parking type. Defaulting to "Standard" here.
             parkingType: "Standard",
-            note: "Auto-accepted join request."
+            note: note
           })
         });
         const data = await response.json();
@@ -825,7 +969,7 @@ async function resolveIssue(issueId) {
             userId: userId,
             festivalId: festivalId,
             newParkingType: newValue,
-            note: "Auto-accepted parking upgrade request."
+            note: note
           })
         });
         const data = await response.json();
@@ -853,7 +997,7 @@ async function resolveIssue(issueId) {
     if (!confirmation) return;
 
     if (action === "accept") {
-      const success = await implementAction(issue);
+      const success = await implementAction(issue,note);
       if (!success) {
         showDismissAlert("Failed to implement the action.");
         return;
@@ -1995,6 +2139,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         navLinks.classList.toggle("active");
     });
 
+    document.getElementById("showFestivals").addEventListener("click", () => {
+      showFestivalAdminModal();
+    });
+
+    
     // Search users
     document.getElementById("searchInput").addEventListener("input", async function() {
         const query = this.value;

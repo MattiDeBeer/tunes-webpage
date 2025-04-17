@@ -75,20 +75,13 @@ const Issue = sequelize.define("Issue", {
     }
 }, { timestamps: true });
 
-
-
-// Sync database
-sequelize.sync({ force: false }).then(() => {  
-    console.log("Database & tables synced!");
-});
-
 const Festival = sequelize.define("Festival", {
     name: { type: DataTypes.STRING, allowNull: false },
     location: { type: DataTypes.STRING, allowNull: false },
     startDate: { type: DataTypes.DATEONLY, allowNull: false },
     endDate: { type: DataTypes.DATEONLY, allowNull: false },
-}, { timestamps: false });
-
+    inductionLink: { type: DataTypes.STRING, allowNull: true, defaultValue: null }
+  }, { timestamps: false });
 
 const UserFestival = sequelize.define("UserFestival", {
     parkingType: {
@@ -123,5 +116,10 @@ const festivalsToAdd = [
         console.log("Added initial festival data.");
     }
 })();
+
+// Sync database
+sequelize.sync({ force: false }).then(() => {  
+    console.log("Database & tables synced!");
+});
 
 module.exports = { sequelize, User, Alert, Issue, Festival, UserFestival };
