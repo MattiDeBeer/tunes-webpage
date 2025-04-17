@@ -23,3 +23,7 @@ server/messages.txt
 
 # Ignore .pem files in the server directory
 server/*.pem
+
+#ignore server scripts
+start-server.sh
+stop-server.sh
